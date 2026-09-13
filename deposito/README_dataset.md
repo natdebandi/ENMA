@@ -32,15 +32,16 @@ conserva identificadores directos, geografía fina ni campos de texto libre.
 
 ## Marco de uso
 
-La base no constituye una liberación oficial de la ENMA. Fue tratada a partir de datos obtenidos
-mediante el formulario de solicitud de la fuente. Su uso se enmarca en los lineamientos del Comité
-de Ética de CONICET y en la Ley de Protección de Datos Personales (N.º 25.326), que son el marco
-declarado por la encuesta para la circulación de sus datos.
+La base no constituye una liberación oficial de la ENMA. Se generó a partir del archivo de origen
+de la encuesta, con el tratamiento documentado más arriba. Su uso se enmarca en los lineamientos
+del Comité de Ética de CONICET y en la Ley de Protección de Datos Personales (N.º 25.326), que son
+el marco declarado por la encuesta para la circulación de sus datos.
 
 ## Cómo citar
 
 Base anonimizada, versión 1:
 https://github.com/natdebandi/ENMA_2023/releases/tag/datos-v1
 
-La encuesta es una iniciativa del CONICET y de organizaciones de migrantes y de derechos humanos.
-Sitio de la fuente: https://www.encuestamigrante.ar/
+La encuesta es una iniciativa de la Red de Investigaciones en Derechos Humanos del CONICET y de
+organizaciones de migrantes e investigadoras e investigadores de todo el país.
+Sitio de la encuesta y documentación: https://www.encuestamigrante.ar/
