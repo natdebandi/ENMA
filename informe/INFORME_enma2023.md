@@ -49,9 +49,10 @@ y la segunda LF. El trabajo se hizo sobre la primera.
 
 ## 3. La versión anonimizada
 
-La versión tratada se generó en `~/investigacion/Workspace_R/ENMA_publico/`, con
-`scripts/anonimizar_enma.py` como script productor y `data/ENMA2023_anonima_v2.csv` como resultado de
-4.679 filas por 228 columnas.
+La versión tratada se generó en `~/investigacion/Workspace_R/ENMA_publico/` mediante un script de
+preparación, con `data/ENMA2023_anonima_v2.csv` como resultado de 4.679 filas por 228 columnas. El
+script quedó como utilitario local y no integra el repositorio, que publica la base y el
+procesamiento del Anuario y no las herramientas que los produjeron.
 
 El criterio se corrigió durante el trabajo. La primera versión eliminaba siete columnas y conservaba
 237. Al auditar el resultado aparecieron doce campos que no reidentifican por combinación de
@@ -64,10 +65,10 @@ la identificación personal de quien respondía.
 
 La versión definitiva elimina diecinueve columnas en dos etapas. La primera comprende los
 identificadores directos `ID` y `fecha`, las cuatro variables de geografía fina y la ocupación en
-texto libre. La segunda comprende las doce columnas de respuesta libre detectadas con un criterio
-definido en el script, que alcanza a las columnas con al menos diez valores no vacíos, más del 75 %
-de valores distintos y extensión media superior a doce caracteres. El criterio es auditable y no
-responde a una selección manual.
+texto libre. La segunda comprende las doce columnas de respuesta libre detectadas con una regla
+explícita, que alcanza a las columnas con al menos diez valores no vacíos, más del 75 % de valores
+distintos y extensión media superior a doce caracteres. El criterio es auditable y no responde a una
+selección manual.
 
 La versión conserva las variables agregadas que la base ya traía, de modo que los cruces habituales
 siguen siendo posibles. Se mantienen `region_amba_agrup` con seis regiones, `genero_agrup`,
@@ -95,8 +96,8 @@ un mismo repositorio sugiere una división por tema. No se modificó nada más q
 ## 5. Estado de la publicación
 
 El código de procesamiento se subió a `natdebandi/ENMA_2023`, que contiene los ocho capítulos con su
-versión html, los dos scripts, este informe y la documentación del depósito. La verificación contra
-la interfaz de GitHub confirma que no hay archivos de datos en el árbol versionado. El `.gitignore`
+versión html, este informe y la documentación del depósito. La verificación contra la interfaz de
+GitHub confirma que no hay archivos de datos en el árbol versionado. El `.gitignore`
 excluye `data/`, las extensiones `csv`, `xls`, `xlsx`, `sav` y `dta`, y los archivos `zip`, dado que
 el paquete de publicación lleva la base en su interior.
 

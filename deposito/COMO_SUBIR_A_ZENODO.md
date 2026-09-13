@@ -24,8 +24,9 @@ si el colectivo acuerda que una versión anonimizada circule fuera del formulari
 
    - Tipo de recurso: conjunto de datos.
    - Título: `ENMA 2023 — Base anonimizada (Encuesta Nacional Migrante de Argentina)`.
-   - Autores: cada uno con su identificador ORCID, que Zenodo busca por nombre. La descripción
-     señala que la encuesta corresponde al colectivo ENMA.
+   - Autores: Natalia Debandi, ORCID 0000-0002-2619-6270, con afiliación en el Centro de
+     Inteligencia Artificial Interdisciplinario (CIAI), Universidad Nacional de San Martín y
+     CONICET. La descripción señala que la encuesta corresponde al colectivo ENMA.
    - Descripción: el contenido de `deposito/README_dataset.md`, en formato Markdown.
    - Licencia: Creative Commons Attribution 4.0 International.
    - Palabras clave: migración, Argentina, ENMA, microdatos, anonimización.
@@ -54,7 +55,6 @@ sha256  ENMA2023_anonima_v2.csv
 sha256  ENMA2023_anonima_v2.zip
 ```
 
-Ambos resúmenes criptográficos constan en `SHA256SUMS.txt`. El script productor es reproducible y
-consta en el repositorio. La base reúne 4.679 registros y 228 variables, sin identificadores
-directos, geografía fina, ocupación en texto libre ni las doce columnas de respuesta libre
-detectadas por regla.
+Ambos resúmenes criptográficos constan en `SHA256SUMS.txt`. La base reúne 4.679 registros y 228
+variables, sin identificadores directos, geografía fina, ocupación en texto libre ni las doce
+columnas de respuesta libre detectadas por regla.

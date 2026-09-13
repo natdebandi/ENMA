@@ -10,6 +10,10 @@ data/
 # La licencia y el README del deposito son texto y si van al repo.
 *.zip
 
+# Utilitarios de preparacion de la base: quedan en local, no se publican.
+# El repositorio contiene el material final, no las herramientas que lo produjeron.
+scripts/
+
 # Basura de RStudio
 .Rproj.user
 .Rhistory
