@@ -1,0 +1,527 @@
+---
+title: "Anuario ENMA 2023 - Capítulo 7"
+output: html_document
+---
+
+## Instalación y carga de librerías necesarias
+
+```{r librerias, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Cargar librerías
+library(tidyverse)  # Manipulación y visualización de datos
+library(readxl)     # Lectura de archivos Excel
+library(janitor)    # Limpieza y estandarización de nombres de variables
+library(knitr)      # Generación de tablas en documentos dinámicos
+library(kableExtra) # Mejora en la presentación de tablas
+```
+
+
+## Carga de la base de datos ENMA 2023
+
+```{r carga, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Carga del archivo CSV con la base de datos de la ENMA 2023
+enma <- read.csv("data/ENMA2023_final_public.csv")
+
+# Alternativamente, para leer desde un archivo Excel descomentar la siguiente línea:
+# enma <- read_xlsx("data/ENMA2023_final_public.xlsx", sheet = 1)
+
+
+```
+
+## Exploración inicial de la base de datos
+
+```{r exploración, eval=FALSE, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Mostrar los nombres de las variables en la base de datos
+names(enma)
+
+# Para ver la estructura de la base de datos descomentar la siguiente línea:
+str(enma)
+
+```
+
+## Gráfico 7.1: Frecuencia en que experimentó discriminación la población migrante residente en la Argentina (en porcentaje)
+
+```{r graf_7.1, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q62_discriminacion = na_if(q62_discriminacion, ""))
+
+# Gráfico 7.1
+grafico_7.1 <- enma1 %>%
+  filter(!is.na(q62_discriminacion)) %>%  #Filtra datos
+  group_by(q62_discriminacion) %>%   # Agrupar por discriminación
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  #Calcula distribución
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% #Calcula porcentaje
+  arrange(desc(Porcentaje)) %>%  # Ordenar de mayor a menor
+  rename("Experimentó discriminación"=q62_discriminacion)
+
+# Imprimir la tabla
+knitr::kable(grafico_7.1) %>%
+  kable_minimal()
+
+
+
+```
+
+
+## Gráfico 7.2: Proporción de personas que experimentaron discriminación según ascendencia étnica (en porcentaje)
+
+```{r graf_7.2, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q62_discriminacion = na_if(q62_discriminacion, ""))
+
+# Gráfico 7.2
+grafico_7.2 <- enma1 %>%
+  mutate(Descendencia = case_when(
+    q5_descendencia_afro == 1  ~ "Afro",
+    q5_descendencia_indigena == 1 ~ "Indígena",
+    q5_descendencia_ninguno==1 ~ "Ninguno",
+    TRUE ~ NA_character_  # Si no es Afro ni Indígena, se asigna a "Ninguno"
+  )) %>% #Construye variable "Descendencia"
+  filter(!is.na(Descendencia)) %>%
+  mutate(q62_discriminacion = case_when(
+    q62_discriminacion %in% c("Sí, frecuentemente", "Sí, alguna vez") ~ "Sí, al menos alguna vez",
+    q62_discriminacion == "No, nunca" ~ "No, nunca",
+    TRUE ~ NA_character_)) %>% #Recodifico variable q62
+  filter(!is.na(q62_discriminacion)) %>% #Filtra datos
+  group_by(Descendencia, q62_discriminacion) %>% #Agrupa por descendencia y discriminación
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>% #Calcula distribución
+  group_by(Descendencia) %>% #Agrupa solo por descendencia
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% #Calcula porcentajes dentro de cada categoría
+  select(Descendencia, q62_discriminacion, Porcentaje) %>% #Selecciona variables a mostrar
+  pivot_wider(names_from = q62_discriminacion, values_from = Porcentaje, values_fill = 0) #Gira la tabla
+
+# Imprimir la tabla
+knitr::kable(grafico_7.2) %>%
+  kable_minimal()
+```
+
+## Gráfico 7.3: Proporción de personas que experimentaron discriminación según país de origen (en porcentaje)
+
+```{r graf_7.3, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Creación de un vector con las nacionalidades seleccionadas
+nacionalidades <- c("Brasil", "Paraguay", "Chile", "Perú", "Venezuela", "Uruguay", "Bolivia", 
+                    "Colombia", "España", "Italia", "Haití", "Senegal")
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q62_discriminacion = na_if(q62_discriminacion, ""))
+
+#Gráfico 7.3
+grafico_7.3 <- enma1 %>%
+  filter(!is.na(q62_discriminacion) & q3_pais_nacimiento %in% nacionalidades) %>%  # Filtra datos válidos
+  mutate(q62_discriminacion = case_when(
+    q62_discriminacion %in% c("Sí, frecuentemente", "Sí, alguna vez") ~ "Sí, al menos alguna vez",
+    q62_discriminacion == "No, nunca" ~ "No, nunca",
+    TRUE ~ NA_character_)) %>%  # Recodifica la variable de discriminación
+  filter(!is.na(q62_discriminacion)) %>%  # Filtra valores NA de discriminación
+  group_by(q3_pais_nacimiento, q62_discriminacion) %>%  # Agrupa por nacionalidad y discriminación
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  # Suma ponderada
+  group_by(q3_pais_nacimiento) %>%  # Agrupa solo por nacionalidad
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%  # Calcula % dentro de cada nacionalidad
+  filter(q62_discriminacion == "Sí, al menos alguna vez") %>%  # Se queda solo con esta categoría
+  select(q3_pais_nacimiento, Porcentaje) %>%  
+  arrange(desc(Porcentaje))  # Ordena de mayor a menor
+
+
+# Imprimir la tabla
+knitr::kable(grafico_7.3) %>%
+  kable_minimal()
+
+```
+
+
+## Gráfico 7.4: Proporción de personas que experimentaron discriminación según región de residencia
+
+```{r graf_7.4, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q62_discriminacion = na_if(q62_discriminacion, ""))
+
+#Gráfico 7.4
+grafico_7.4 <- enma1 %>%
+  filter(!is.na(q62_discriminacion) & !is.na(region_amba_agrup)) %>%  # Filtra datos válidos
+  mutate(q62_discriminacion = case_when(
+    q62_discriminacion %in% c("Sí, frecuentemente", "Sí, alguna vez") ~ "Sí, al menos alguna vez",
+    q62_discriminacion == "No, nunca" ~ "No, nunca",
+    TRUE ~ NA_character_)) %>%  # Recodifica la variable de discriminación
+  filter(!is.na(q62_discriminacion)) %>%  # Filtra valores NA de discriminación
+  group_by(region_amba_agrup, q62_discriminacion) %>%  # Agrupa por región de residenciay discriminación
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  # Suma ponderada
+  group_by(region_amba_agrup) %>%  # Agrupa solo por región de residencia
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%  # Calcula % dentro de cada región
+  select("Región de residencia"=region_amba_agrup, q62_discriminacion, Porcentaje) %>%  
+  pivot_wider(names_from = q62_discriminacion, values_from = Porcentaje, values_fill = 0) %>%  
+  arrange(desc(`Sí, al menos alguna vez`))  # Ordena por mayor
+
+
+# Imprimir la tabla
+knitr::kable(grafico_7.4) %>%
+  kable_minimal()
+```
+
+
+## Gráfico 7.5: Ámbitos donde la población migrante ha experimentado más frecuentemente discriminación (en porcentaje). Pregunta de selección múltiple
+
+```{r graf_7.5, echo=TRUE, message=FALSE, warning=FALSE}
+
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q63_discriminacion= na_if(q63_discriminacion, ""))
+
+#Gráfico 7.5
+grafico_7.5 <- enma1 %>%
+  filter(!is.na(q63_discriminacion)) %>%  # Filtra valores no deseados
+# Convertir variables en binarias
+  mutate(
+    q63_discriminacion_calle=ifelse(q63_discriminacion_calle==1,1,0),
+    q63_discriminacion_trabajo=ifelse(q63_discriminacion_trabajo==1,1,0),
+    q63_discriminacion_transporte=ifelse(q63_discriminacion_transporte==1,1,0),
+    q63_discriminacion_estado=ifelse(q63_discriminacion_estado==1,1,0),
+    q63_discriminacion_grupos_sociales=ifelse(q63_discriminacion_grupos_sociales==1,1,0),
+    q63_discriminacion_educacion=ifelse(q63_discriminacion_educacion==1,1,0),
+    q63_discriminacion_medios_comunicacion=ifelse(q63_discriminacion_medios_comunicacion==1,1,0),
+    q63_discriminacion_atencion_medica=ifelse(q63_discriminacion_atencion_medica==1,1,0),
+    q63_discriminacion_fuerzas=ifelse(q63_discriminacion_fuerzas==1,1,0)) %>% 
+  # Calcular el total ponderado de la población y de cada lugar donde sufre discriminación
+  summarise(
+    Poblacion = round(sum(weightvec, na.rm = TRUE), 0),
+    calle=round(sum(weightvec*q63_discriminacion_calle, na.rm = TRUE),0),
+    trabajo=round(sum(weightvec*q63_discriminacion_trabajo, na.rm = TRUE),0),
+    transporte=round(sum(weightvec*q63_discriminacion_transporte, na.rm = TRUE),0),
+    estado=round(sum(weightvec*q63_discriminacion_estado, na.rm = TRUE),0),
+    grupos_sociales=round(sum(weightvec*q63_discriminacion_grupos_sociales, na.rm = TRUE),0),
+    educacion=round(sum(weightvec*q63_discriminacion_educacion, na.rm = TRUE),0),
+    medios_comunicacion=round(sum(weightvec*q63_discriminacion_medios_comunicacion, na.rm = TRUE),0),
+    atencion_medica=round(sum(weightvec*q63_discriminacion_atencion_medica, na.rm = TRUE),0),
+    fuerzas=round(sum(weightvec*q63_discriminacion_fuerzas, na.rm = TRUE),0)) %>% 
+  # Calcular los porcentajes de lugar sobre el total de la población
+  mutate(
+    'En la calle'= round(calle / Poblacion * 100, 1),
+    'En el trabajo' = round(trabajo / Poblacion * 100, 1),
+    'En el transporte público' = round(transporte / Poblacion * 100, 1),
+    'En oficinas del Estado'= round(estado/ Poblacion * 100, 1),
+    'En grupos sociales'= round(grupos_sociales / Poblacion * 100, 1),
+    'En la escuela y/o universidad' = round(educacion/ Poblacion * 100, 1),
+    'A través de medios de comunicación' = round(medios_comunicacion/ Poblacion * 100, 1),
+    'En atención médica' = round(atencion_medica / Poblacion * 100, 1),
+    'Por parte de las fuerzas de seguridad' = round(fuerzas / Poblacion * 100, 1)) %>% 
+  select(11:19) %>%  # Seleccionar solo las columnas con los porcentajes calculados
+  pivot_longer(cols = everything(), names_to = "Problema", values_to = "Porcentaje")  # Girar la tabla
+
+# Imprimir la tabla
+knitr::kable(grafico_7.5) %>%
+  kable_minimal()
+```
+
+## Gráfico 7.6: Ámbitos donde se ha experimentado más frecuentemente discriminación según género (en porcentaje). Pregunta de selección múltiple
+
+```{r graf_7.6, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q63_discriminacion= na_if(q63_discriminacion, ""))
+
+
+#Gráfico 7.6
+grafico_7.6 <- enma1 %>%
+  filter(!is.na(q63_discriminacion) & (genero_agrup=="Mujer" | genero_agrup=="Varón")) %>%  # Filtra valores no deseados
+# Convertir variables en binarias
+  mutate(
+    q63_discriminacion_calle=ifelse(q63_discriminacion_calle==1,1,0),
+    q63_discriminacion_trabajo=ifelse(q63_discriminacion_trabajo==1,1,0),
+    q63_discriminacion_transporte=ifelse(q63_discriminacion_transporte==1,1,0),
+    q63_discriminacion_estado=ifelse(q63_discriminacion_estado==1,1,0),
+    q63_discriminacion_grupos_sociales=ifelse(q63_discriminacion_grupos_sociales==1,1,0),
+    q63_discriminacion_educacion=ifelse(q63_discriminacion_educacion==1,1,0),
+    q63_discriminacion_medios_comunicacion=ifelse(q63_discriminacion_medios_comunicacion==1,1,0),
+    q63_discriminacion_atencion_medica=ifelse(q63_discriminacion_atencion_medica==1,1,0),
+    q63_discriminacion_fuerzas=ifelse(q63_discriminacion_fuerzas==1,1,0)) %>% 
+  group_by(genero_agrup) %>% 
+  # Calcular el total ponderado de la población y de cada lugar
+  summarise(
+    Poblacion = round(sum(weightvec, na.rm = TRUE), 0),
+    calle=round(sum(weightvec*q63_discriminacion_calle, na.rm = TRUE),0),
+    trabajo=round(sum(weightvec*q63_discriminacion_trabajo, na.rm = TRUE),0),
+    transporte=round(sum(weightvec*q63_discriminacion_transporte, na.rm = TRUE),0),
+    estado=round(sum(weightvec*q63_discriminacion_estado, na.rm = TRUE),0),
+    grupos_sociales=round(sum(weightvec*q63_discriminacion_grupos_sociales, na.rm = TRUE),0),
+    educacion=round(sum(weightvec*q63_discriminacion_educacion, na.rm = TRUE),0),
+    medios_comunicacion=round(sum(weightvec*q63_discriminacion_medios_comunicacion, na.rm = TRUE),0),
+    atencion_medica=round(sum(weightvec*q63_discriminacion_atencion_medica, na.rm = TRUE),0),
+    fuerzas=round(sum(weightvec*q63_discriminacion_fuerzas, na.rm = TRUE),0)) %>% 
+  # Calcular los porcentajes de lugar sobre el total de la población
+  mutate(
+    'En la calle'= round(calle / Poblacion * 100, 1),
+    'En el trabajo' = round(trabajo / Poblacion * 100, 1),
+    'En el transporte público' = round(transporte / Poblacion * 100, 1),
+    'En oficinas del Estado'= round(estado/ Poblacion * 100, 1),
+    'En grupos sociales'= round(grupos_sociales / Poblacion * 100, 1),
+    'En la escuela y/o universidad' = round(educacion/ Poblacion * 100, 1),
+    'A través de medios de comunicación' = round(medios_comunicacion/ Poblacion * 100, 1),
+    'En atención médica' = round(atencion_medica / Poblacion * 100, 1),
+    'Por parte de las fuerzas de seguridad' = round(fuerzas / Poblacion * 100, 1)) %>% 
+  select("Género"=1, 12:20)%>%  # Mantiene solo los porcentajes y la variable género
+  pivot_longer(cols = -Género, names_to = "Ámbito de discriminación", values_to = "Porcentaje") %>%  
+  pivot_wider(names_from = Género, values_from = Porcentaje)  # Transpone la tabla para que género sean columnas
+
+# Imprimir la tabla
+knitr::kable(grafico_7.6) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 7.7: Frecuencia en que se registra situaciones de violencia por parte de la policía o las fuerzas de seguridad en los últimos dos años (en porcentaje)
+
+```{r graf_7.7, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q64_violencia_fuerza_seguridad = na_if(q64_violencia_fuerza_seguridad, ""))
+
+# Gráfico 7.7
+grafico_7.7 <- enma1 %>%
+  filter(!is.na(q64_violencia_fuerza_seguridad)) %>%  #Filtra datos
+  group_by(q64_violencia_fuerza_seguridad) %>%   # Agrupar por violencia de fuerzas
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  #Calcula distribución
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% #Calcula porcentaje
+  arrange(desc(Porcentaje)) %>%  # Ordenar de mayor a menor
+  rename("Situaciones de violencia"=q64_violencia_fuerza_seguridad) #Renombra variable
+
+# Imprimir la tabla
+knitr::kable(grafico_7.7) %>%
+  kable_minimal()
+
+```
+
+
+## Gráfico 7.8: Situaciones de violencia por parte de las fuerzas de seguridad según género binario (en porcentaje)
+```{r graf_7.8, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q64_violencia_fuerza_seguridad = na_if(q64_violencia_fuerza_seguridad, ""))
+
+# Gráfico 7.8
+grafico_7.8 <- enma1 %>%
+  #Recodifico q64
+  mutate(q64_violencia_fuerza_seguridad = case_when(
+    q64_violencia_fuerza_seguridad %in% c("Sí, frecuentemente", "Sí, alguna vez") ~ "Sí",
+    q64_violencia_fuerza_seguridad == "No, nunca" ~ "No",
+    TRUE ~ NA_character_)) %>%
+  filter(!is.na(q64_violencia_fuerza_seguridad) & (genero_agrup == "Mujer" | genero_agrup == "Varón")) %>%  #Filtra datos
+  group_by(genero_agrup, q64_violencia_fuerza_seguridad) %>%  #Agrupo datos
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  
+  group_by(genero_agrup) %>%  #Agrupa por género
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% #Calcula distribución
+  filter(q64_violencia_fuerza_seguridad=="Sí") %>% 
+  select("Género" = genero_agrup, Porcentaje)
+
+
+# Imprimir la tabla
+knitr::kable(grafico_7.8) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 7.9: Situaciones de violencia por parte de las fuerzas de seguridad según grupos etarios (en porcentaje)
+```{r graf_7.9, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q64_violencia_fuerza_seguridad = na_if(q64_violencia_fuerza_seguridad, ""))
+
+# Gráfico 7.9
+grafico_7.9 <- enma1 %>%
+  #Recodifico q64
+  mutate(q64_violencia_fuerza_seguridad = case_when(
+    q64_violencia_fuerza_seguridad %in% c("Sí, frecuentemente", "Sí, alguna vez") ~ "Sí",
+    q64_violencia_fuerza_seguridad == "No, nunca" ~ "No",
+    TRUE ~ NA_character_)) %>% 
+  filter(!is.na(q64_violencia_fuerza_seguridad) & !is.na(edad_agrup)) %>%  #Filtra datos
+  group_by(edad_agrup, q64_violencia_fuerza_seguridad) %>%  #Agrupo datos
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  
+  group_by(edad_agrup) %>%  
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% 
+  filter(q64_violencia_fuerza_seguridad=="Sí") %>% 
+  select("Grupos de edad" = edad_agrup, Porcentaje)
+
+
+# Imprimir la tabla
+knitr::kable(grafico_7.9) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 7.10: Situaciones de violencia por parte de las fuerzas de seguridad según ascendencia étnica (en porcentaje)
+
+```{r graf_7.10, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q64_violencia_fuerza_seguridad = na_if(q64_violencia_fuerza_seguridad, ""))
+
+# Gráfico 7.10
+grafico_7.10 <- enma1 %>%
+  mutate(Descendencia = case_when(
+    q5_descendencia_afro == 1  ~ "Afro",
+    q5_descendencia_indigena == 1 ~ "Indígena",
+    q5_descendencia_ninguno==1 ~ "Ninguno",
+    TRUE ~ NA_character_  # Si no es Afro ni Indígena, se asigna a "Ninguno"
+  )) %>%
+  filter(!is.na(Descendencia)) %>%
+  #Recodifico q64
+  mutate(q64_violencia_fuerza_seguridad = case_when(
+    q64_violencia_fuerza_seguridad %in% c("Sí, frecuentemente", "Sí, alguna vez") ~ "Sí",
+    q64_violencia_fuerza_seguridad == "No, nunca" ~ "No",
+    TRUE ~ NA_character_)) %>%
+  filter(!is.na(q64_violencia_fuerza_seguridad)) %>%
+  group_by(Descendencia, q64_violencia_fuerza_seguridad) %>%
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%
+  group_by(Descendencia) %>%
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%
+  select(Descendencia, q64_violencia_fuerza_seguridad, Porcentaje) %>%
+  pivot_wider(names_from = q64_violencia_fuerza_seguridad, values_from = Porcentaje, values_fill = 0)
+
+# Imprimir la tabla
+knitr::kable(grafico_7.10) %>%
+  kable_minimal()
+```
+
+## Gráfico 7.11: Situaciones de violencia por parte de las fuerzas de seguridad hacia migrantes según país de origen (en porcentaje)
+
+```{r graf_7.11, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Creación de un vector con las nacionalidades seleccionadas
+nacionalidades <- c("Brasil", "Paraguay", "Chile", "Perú", "Venezuela", "Uruguay", "Bolivia", 
+                    "Colombia", "España", "Haití", "Senegal", "República Dominicana", 
+                    "Ecuador", "México","Cuba")
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q64_violencia_fuerza_seguridad = na_if(q64_violencia_fuerza_seguridad, ""))
+
+# Gráfico 7.11
+grafico_7.11 <- enma1 %>%
+  # Recodificar la nacionalidad incluyendo México desde q3_pais_otro
+  mutate(q3_pais_nacimiento = case_when(
+    q3_pais_otro %in% c("MEXICO", "Mexico", "México") ~ "México",  # Agregar México a q3_pais_nacimiento
+    TRUE ~ q3_pais_nacimiento)) %>%
+  # Recodificar q64_violencia_fuerza_seguridad
+  mutate(q64_violencia_fuerza_seguridad = case_when(
+    q64_violencia_fuerza_seguridad %in% c("Sí, frecuentemente", "Sí, alguna vez") ~ "Sí",
+    q64_violencia_fuerza_seguridad == "No, nunca" ~ "No",
+    TRUE ~ NA_character_)) %>% 
+  # Filtrar datos válidos y solo las nacionalidades de interés
+  filter(!is.na(q64_violencia_fuerza_seguridad) & q3_pais_nacimiento %in% nacionalidades) %>% 
+  # Agrupar y calcular cantidades ponderadas
+  group_by(q3_pais_nacimiento, q64_violencia_fuerza_seguridad) %>%  
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  
+  # Calcular porcentaje dentro de cada nacionalidad
+  group_by(q3_pais_nacimiento) %>%  
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% 
+  # Filtrar solo quienes respondieron "Sí" a la violencia de fuerzas de seguridad
+  filter(q64_violencia_fuerza_seguridad == "Sí") %>%  
+  # Seleccionar solo las columnas necesarias
+  select("Nacionalidad" = q3_pais_nacimiento, Porcentaje) %>%  
+  # Ordenar de mayor a menor porcentaje
+  arrange(desc(Porcentaje))
+
+# Imprimir la tabla
+knitr::kable(grafico_7.11) %>%
+  kable_minimal()
+
+
+```
+
+## Gráfico 7.12: Situaciones de VBG entre mujeres migrantes en 2020 y 2023 (en porcentaje)
+
+```{r graf_7.12, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q65_violencia_genero = na_if(q65_violencia_genero, ""))
+
+#Gráfico 7.12
+grafico_7.12 <- enma1 %>%
+  filter(!is.na(q65_violencia_genero) & q65_violencia_genero!="Prefiero no responder" & (genero_agrup=="Mujer")) %>%  # Filtra datos 
+  group_by(q65_violencia_genero) %>%  # Agrupa por violencia VBG
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  # Suma ponderada
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%  # Calcula % dentro de cada categoría
+  rename("Situaciones de VBG"=1)
+
+
+
+# Imprimir la tabla
+knitr::kable(grafico_7.12) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 7.13: Situaciones de VBG entre mujeres migrantes según grupo etario (en porcentaje)
+
+```{r graf_7.13, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q65_violencia_genero = na_if(q65_violencia_genero, ""))
+
+#Gráfico 7.13
+grafico_7.13 <- enma1 %>%
+  mutate(grupo_edad = case_when(
+    q2_edad >= 18 & q2_edad <= 29 ~ "18-29",
+    q2_edad >= 30 & q2_edad <= 44 ~ "30-44",
+    q2_edad >= 45 & q2_edad <= 65 ~ "45-65",
+    q2_edad > 65 ~ "65+",
+    TRUE ~ NA_character_)) %>%   # Recodifica variable edad en grupos
+  filter(!is.na(q65_violencia_genero) & q65_violencia_genero!="Prefiero no responder" & (genero_agrup=="Mujer") & !is.na(grupo_edad)) %>%  # Filtra datos 
+  group_by(grupo_edad, q65_violencia_genero) %>%  # Agrupa por grupos de edad y VBG
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  # Suma ponderada
+  group_by(grupo_edad) %>%  # Agrupa solo por grupos de edad
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%  # Calcula % dentro de cada grupo
+  select("Grupos de edad"=grupo_edad, q65_violencia_genero, Porcentaje) %>%  
+  pivot_wider(names_from = q65_violencia_genero, values_from = Porcentaje, values_fill = 0) 
+
+
+# Imprimir la tabla
+knitr::kable(grafico_7.13) %>%
+  kable_minimal()
+```
+
+
+## Gráfico 7.14: Situaciones de VBG entre mujeres migrantes según país de origen (en porcentaje)
+```{r graf_7.14, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Creación de un vector con las nacionalidades seleccionadas
+nacionalidades <- c("Brasil", "Paraguay", "Chile", "Perú", "Venezuela", "Uruguay", "Bolivia", 
+                    "Colombia", "España", "Italia")
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q65_violencia_genero = na_if(q65_violencia_genero, ""))
+
+#Gráfico 7.14
+grafico_7.14 <- enma1 %>%
+  filter(!is.na(q65_violencia_genero) & q65_violencia_genero != "Prefiero no responder" & 
+           genero_agrup == "Mujer" & q3_pais_nacimiento %in% nacionalidades) %>%  # Filtra datos 
+  group_by(q3_pais_nacimiento, q65_violencia_genero) %>%  # Agrupa por nacionalidad y VBG
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  # Suma ponderada
+  group_by(q3_pais_nacimiento) %>%  # Agrupa solo por nacionalidad
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%   # Calcula % dentro de cada nacionalidad
+  filter(q65_violencia_genero == "Sí") %>%  # Mantener solo los casos que sí experimentaron VBG
+  select("Nacionalidad" = q3_pais_nacimiento, Porcentaje) %>%  
+  arrange(desc(Porcentaje))  # Ordenar de mayor a menor porcentaje
+
+# Imprimir la tabla
+knitr::kable(grafico_7.14) %>%
+  kable_minimal()
+```
+

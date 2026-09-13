@@ -1,0 +1,585 @@
+---
+title: "Anuario ENMA 2023 - Capítulo 5"
+output: html_document
+---
+
+## Instalación y carga de librerías necesarias
+
+```{r librerias, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Cargar librerías
+library(tidyverse)  # Manipulación y visualización de datos
+library(readxl)     # Lectura de archivos Excel
+library(janitor)    # Limpieza y estandarización de nombres de variables
+library(knitr)      # Generación de tablas en documentos dinámicos
+library(kableExtra) # Mejora en la presentación de tablas
+```
+
+
+## Carga de la base de datos ENMA 2023
+
+```{r carga, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Carga del archivo CSV con la base de datos de la ENMA 2023
+enma <- read.csv("data/ENMA2023_final_public.csv")
+
+# Alternativamente, para leer desde un archivo Excel descomentar la siguiente línea:
+# enma <- read_xlsx("data/ENMA2023_final_public.xlsx", sheet = 1)
+
+
+```
+
+## Exploración inicial de la base de datos
+
+```{r exploración, eval=FALSE, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Mostrar los nombres de las variables en la base de datos
+names(enma)
+
+# Para ver la estructura de la base de datos descomentar la siguiente línea:
+str(enma)
+
+```
+
+## Gráfico 5.1: Situación ocupacional de la población migrante en la Argentina (en porcentaje)
+
+```{r graf_5.1, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Gráfico 5.1
+grafico_5.1 <- enma %>%
+  mutate(q51_situacion_ocupacional=case_when(
+    q51_situacion_ocupacional=="Con trabajo y remuneración fija" ~ "Remuneración fija",
+    q51_situacion_ocupacional=="Realizando changas, trabajos esporádicos o subempleado" | q51_situacion_ocupacional=="Venta ambulante"~ "Subempleo (changas, etc)", #Recodifico para agrupar categorías
+    TRUE ~ q51_situacion_ocupacional)) %>% 
+  filter(!is.na(q51_situacion_ocupacional) & q51_situacion_ocupacional!="Prefiero no responder" & q51_situacion_ocupacional!="Sin trabajar con licencia" & q51_situacion_ocupacional!="Otra") %>%  #Filtra datos
+  group_by(q51_situacion_ocupacional) %>%   # Agrupar por situación ocupacional
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  #Calcula distribución
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% #Calcula porcentaje
+  arrange(desc(Porcentaje)) %>%  # Ordenar de mayor a menor 
+  rename("Situación ocupacional"=q51_situacion_ocupacional) #Renombra variable
+
+# Imprimir la tabla
+knitr::kable(grafico_5.1) %>%
+  kable_minimal()
+```
+
+
+## Gráfico 5.2: Situación ocupacional de la población migrante según tiempo de residencia (en porcentaje)
+
+```{r graf_5.2, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(tiempo_residencia_agrup= na_if(tiempo_residencia_agrup, ""))
+
+# Gráfico 5.2
+grafico_5.2 <- enma1 %>%
+  # Filtrar valores no deseados
+  filter(!is.na(q51_situacion_ocupacional) & !q51_situacion_ocupacional %in% c("Prefiero no responder", "Sin trabajar con licencia", "Otra") & !is.na(tiempo_residencia_agrup)) %>% 
+  group_by(tiempo_residencia_agrup, q51_situacion_ocupacional) %>%# Agrupar por tiempo de residencia y situación ocupacional
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%# Calcular el total ponderado de cada combinación
+  group_by(tiempo_residencia_agrup) %>%
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% # Calcular el porcentaje dentro de cada categoría
+  select("Tiempo de residencia"=tiempo_residencia_agrup, q51_situacion_ocupacional, Porcentaje) %>% # Selecciona variables
+  pivot_wider(names_from = q51_situacion_ocupacional, values_from = Porcentaje)# Convertir a formato de tabla de doble entrada
+
+# Imprimir la tabla
+knitr::kable(grafico_5.2) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 5.3: Situación ocupacional de la población migrante según tiempo de residencia (en porcentaje)
+
+```{r graf_5.3, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Gráfico 5.3
+grafico_5.3 <- enma %>%
+  # Agrupar categorías de situación ocupacional
+  mutate(q51_situacion_ocupacional = case_when(
+    q51_situacion_ocupacional == "Con trabajo y remuneración fija" ~ "Remuneración fija",
+    q51_situacion_ocupacional %in% c("Realizando changas, trabajos esporádicos o subempleado", "Venta ambulante") ~ "Subempleo (changas, etc)",
+    TRUE ~ q51_situacion_ocupacional
+  )) %>%
+  # Filtrar valores no deseados
+  filter(!is.na(q51_situacion_ocupacional) & !q51_situacion_ocupacional %in% c("Prefiero no responder", "Sin trabajar con licencia", "Otra") & nacionalidad_agrup!="APÁTRIDA" & !is.na(nacionalidad_agrup)) %>%
+  group_by(nacionalidad_agrup, q51_situacion_ocupacional) %>%# Agrupar por nacionalidad y situación ocupacional
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%# Calcular el total ponderado de cada combinación
+  group_by(nacionalidad_agrup) %>%
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% # Calcular el porcentaje dentro de cada nacionalidad
+  select("Región de origen"=nacionalidad_agrup, q51_situacion_ocupacional, Porcentaje) %>% #Seleccionar variables
+  pivot_wider(names_from = q51_situacion_ocupacional, values_from = Porcentaje)# Convertir a formato de tabla de doble entrada
+
+# Imprimir la tabla
+knitr::kable(grafico_5.3) %>%
+  kable_minimal()
+
+```
+
+
+## Gráfico 5.4: Distribución de la inserción de la población migrante en los principales circuitos de producción y empleo (en porcentaje)
+
+```{r graf_5.4, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(circuitos_laborales= na_if(circuitos_laborales, ""))
+
+# Gráfico 5.4
+grafico_5.4 <- enma1 %>%
+  filter(!is.na(circuitos_laborales)) %>%  #Filtra datos
+  group_by(circuitos_laborales) %>%   # Agrupar por situación ocupacional
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  #Calcula distribución
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% #Calcula porcentaje
+  arrange(desc(Porcentaje)) %>%  # Ordenar de mayor a menor 
+  rename("Circuitos laborales"=circuitos_laborales) #Renombra variable
+
+# Imprimir la tabla
+knitr::kable(grafico_5.4) %>%
+  kable_minimal()
+
+```
+
+
+## Gráfico 5.5: Inserción laboral de varones y mujeres migrantes en los principales circuitos de producción y empleo (en porcentaje)
+
+```{r graf_5.5, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(circuitos_laborales= na_if(circuitos_laborales, ""))
+
+# Gráfico 5.5
+grafico_5.5 <- enma1 %>%
+  # Filtrar valores no deseados
+  filter(!is.na(circuitos_laborales) & (genero_agrup=="Mujer" | genero_agrup=="Varón")) %>% 
+  group_by(genero_agrup, circuitos_laborales) %>%# Agrupar por tiempo de residencia y situación ocupacional
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%# Calcular el total ponderado de cada combinación
+  group_by(genero_agrup) %>%
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% # Calcular el porcentaje dentro de cada categoría
+  select("Género"=genero_agrup, circuitos_laborales, Porcentaje) %>% # Selecciona variables
+  pivot_wider(names_from = circuitos_laborales, values_from = Porcentaje)# Convertir a formato de tabla de doble entrada
+
+# Imprimir la tabla
+knitr::kable(grafico_5.5) %>%
+  kable_minimal()
+
+```
+
+
+## Gráfico 5.6: Trabajo vinculado a un área de conocimiento y/o experiencia
+
+```{r graf_5.6, echo=TRUE, message=FALSE, warning=FALSE}
+                       
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q55_experiencia= na_if(q55_experiencia, ""))
+
+# Gráfico 5.6
+grafico_5.6 <- enma1 %>% 
+  filter(!is.na(q55_experiencia) & q55_experiencia!="Prefiero no responder") %>%  #Filtra datos
+  mutate(q55_experiencia=case_when(
+    q55_experiencia=="Si" ~ "Trabajó según su experiencia y conocimientos",
+    q55_experiencia=="No" ~ "No pudo trabajar acorde a su experiencia y conocimiento",
+    TRUE  ~ q55_experiencia)) %>%  #Recodifico variable
+  group_by(q55_experiencia) %>%   # Agrupar por experiencia
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  #Calcula distribución
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% #Calcula porcentaje
+  arrange(desc(Porcentaje)) %>%  # Ordenar de mayor a menor porcentaje
+  rename("Experiencia"=q55_experiencia) #Renombra variable
+
+
+# Imprimir la tabla
+knitr::kable(grafico_5.6) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 5.7: Acceso al trabajo vinculado a un área de conocimiento y/o experiencia previa de la población migrante según región de origen (en porcentaje)
+
+```{r graf_5.7, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q55_experiencia= na_if(q55_experiencia, ""))
+
+# Gráfico 5.7
+grafico_5.7 <- enma1 %>% 
+  filter(!is.na(q55_experiencia) & q55_experiencia != "Prefiero no responder" & nacionalidad_agrup!="APÁTRIDA" & !is.na(nacionalidad_agrup)) %>%  # Filtrar valores no deseados
+  # Reagrupar categorías de experiencia laboral
+  mutate(q55_experiencia = case_when(
+    q55_experiencia == "Si" ~ "Trabajó según su experiencia y conocimientos",
+    q55_experiencia == "No" ~ "No pudo trabajar acorde a su experiencia y conocimientos",
+    TRUE ~ q55_experiencia)) %>% 
+  group_by(nacionalidad_agrup, q55_experiencia) %>%   # Agrupar por nacionalidad y experiencia laboral
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  # Calcular el total ponderado dentro de cada combinación
+  group_by(nacionalidad_agrup) %>%
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%# Calcular el porcentaje dentro de cada nacionalidad
+  select(nacionalidad_agrup, q55_experiencia, Porcentaje) %>%# Seleccionar solo las variables necesarias
+  pivot_wider(names_from = q55_experiencia, values_from = Porcentaje)# Convertir en tabla de doble entrada
+
+# Imprimir la tabla
+knitr::kable(grafico_5.7) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 5.8: Dificultades de acceso al trabajo de la población migrante según grupo etario (en porcentaje)
+
+```{r graf_5.8, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q56_ocupacion_dificultad= na_if(q56_ocupacion_dificultad, ""))
+
+# Gráfico 5.8
+grafico_5.8 <- enma1 %>% 
+  filter(!is.na(q56_ocupacion_dificultad) & q56_ocupacion_dificultad!="Prefiero no responder" & !is.na(edad_agrup)) %>%  # Filtrar valores no deseados
+  group_by(edad_agrup, q56_ocupacion_dificultad) %>%  # Agrupar por edad y respuesta en q56
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>% # Calcular el total ponderado dentro de cada combinación 
+  group_by(edad_agrup) %>%# Calcular el porcentaje dentro de cada grupo etario
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%  
+  filter(q56_ocupacion_dificultad == "Si") %>%# Filtrar solo la categoría "Sí"
+  select("Edad agrupada" = edad_agrup, Porcentaje)# Seleccionar solo las columnas necesarias
+
+
+# Imprimir la tabla
+knitr::kable(grafico_5.8) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 5.9: Proporción de personas migrantes según región de origen que expresaron dificultades de acceso al trabajo (en porcentaje)
+
+```{r graf_5.9, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q56_ocupacion_dificultad= na_if(q56_ocupacion_dificultad, ""))
+
+# Gráfico 5.9
+grafico_5.9 <- enma1 %>% 
+  filter(!is.na(q56_ocupacion_dificultad) & q56_ocupacion_dificultad!="Prefiero no responder" & !is.na(nacionalidad_agrup) & nacionalidad_agrup!="APÁTRIDA") %>%  # Filtrar valores no deseados
+  group_by(nacionalidad_agrup, q56_ocupacion_dificultad) %>%  # Agrupar por nacionalidad y respuesta en q56
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>% # Calcular el total ponderado dentro de cada combinación 
+  group_by(nacionalidad_agrup) %>%# Calcular el porcentaje dentro de cada nacionalidad
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%  
+  filter(q56_ocupacion_dificultad == "Si") %>%# Filtrar solo la categoría "Sí"
+  select("Región de origen" = nacionalidad_agrup, Porcentaje) %>% # Seleccionar solo las columnas necesarias
+  arrange(desc(Porcentaje))
+
+# Imprimir la tabla
+knitr::kable(grafico_5.9) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 5.10: Tipo de dificultades de acceso al trabajo de la población migrante según género (en porcentaje). Pregunta de selección múltiple
+
+```{r graf_5.10, echo=TRUE, message=FALSE, warning=FALSE}
+
+##REVISAR, NO COINCIDE!!
+
+
+# Gráfico 5.10: Dificultades en el acceso al trabajo según tipo
+grafico_5.10 <- enma %>%
+  # Convertir variables en binarias (1 si hubo dificultad, 0 en caso contrario)
+  mutate(
+    q57_dificultad_titulos = ifelse(q57_dificultad_titulos == 1, 1, 0),
+    q57_dificultad_discriminacion = ifelse(q57_dificultad_discriminacion == 1 | q57_dificultad_sexual==1 | q57_dificultad_edad==1, 1, 0),
+    q57_dificultad_hogar = ifelse(q57_dificultad_hogar == 1 | q57_dificultad_salud==1, 1, 0),
+    q57_dificultad_documentacion = ifelse(q57_dificultad_documentacion == 1, 1, 0),
+    q57_dificultad_experiencia = ifelse( q57_dificultad_idioma==1 | q57_dificultad_inexperiencia==1 | q57_dificultad_desconocimiento==1 | q57_dificultad_falta_oferta==1, 1, 0)) %>%
+  filter(q56_ocupacion_dificultad=="Si" & !is.na(q57_dificultad_trabajo) & (genero_agrup=="Mujer" | genero_agrup=="Varón")) %>% #Filtra datos
+  group_by(genero_agrup) %>% 
+  # Calcular el total ponderado de la población y de cada tipo de dificultad
+  summarise(
+    Poblacion = round(sum(weightvec, na.rm = TRUE), 0),
+    titulos = round(sum(weightvec * q57_dificultad_titulos, na.rm = TRUE), 0),
+    discriminacion = round(sum(weightvec * q57_dificultad_discriminacion, na.rm = TRUE), 0),
+    hogar = round(sum(weightvec * q57_dificultad_hogar, na.rm = TRUE), 0),
+    documentacion = round(sum(weightvec * q57_dificultad_documentacion, na.rm = TRUE), 0),
+    experiencia = round(sum(weightvec * q57_dificultad_experiencia, na.rm = TRUE), 0)) %>%
+  # Calcular los porcentajes de cada dificultad sobre el total de la población con dificultades
+  mutate(
+    `Problemas de homologación de títulos` = round(titulos / Poblacion * 100, 1),
+    `Discriminación` = round(discriminacion / Poblacion * 100, 1),
+    `Responsabilidades en el hogar` = round(hogar / Poblacion * 100, 1),
+    `Discriminación` = round(discriminacion / Poblacion * 100, 1),
+    `Falta de documentación` = round(documentacion / Poblacion * 100, 1),
+    `Falta de experiencia, idioma o información` = round(experiencia / Poblacion * 100, 1)) %>% 
+    select("Género"=1, 8:12)  # Seleccionar solo las columnas con los porcentajes calculados
+
+# Imprimir la tabla
+knitr::kable(grafico_5.10) %>%
+  kable_minimal()
+
+
+```
+
+
+## Gráfico 5.11: Envío de remesas (en porcentaje)
+
+```{r graf_5.11, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q58_envio_dinero= na_if(q58_envio_dinero, ""))
+
+# Gráfico 5.11
+grafico_5.11 <- enma1 %>% 
+  filter(!is.na(q58_envio_dinero) & q58_envio_dinero!="Prefiero no responder")%>%  # Filtrar valores no deseados
+  group_by(q58_envio_dinero) %>%  # Agrupar remesas
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>% # Calcular el total ponderado dentro de cada combinación 
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% 
+  select("Envío de remesas" = q58_envio_dinero, Porcentaje) %>% # Seleccionar solo las columnas necesarias
+  arrange(desc(Porcentaje))
+
+# Imprimir la tabla
+knitr::kable(grafico_5.11) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 5.12: Envío de remesas según edad agrupada (en porcentaje)
+```{r graf_5.12, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q58_envio_dinero= na_if(q58_envio_dinero, ""))
+
+# Gráfico 5.12
+grafico_5.12 <- enma1 %>% 
+  filter(!is.na(q58_envio_dinero) & q58_envio_dinero != "Prefiero no responder" & !is.na(edad_agrup)) %>%  
+  group_by(edad_agrup, q58_envio_dinero) %>%  # Agrupar por edad y envío de remesas
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  
+  group_by(edad_agrup) %>% #Agrupa por edad
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% 
+  select("Grupos de edad"=edad_agrup, q58_envio_dinero, Porcentaje) %>%  # Mantener solo las columnas necesarias
+  pivot_wider(names_from = q58_envio_dinero, values_from = Porcentaje, values_fill = 0) %>%  # Convertir en tabla de doble entrada
+  arrange("Grupos de edad")  # Ordenar por grupos de edad
+
+# Imprimir la tabla
+knitr::kable(grafico_5.12) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 5.13: Frecuencia de envío de dinero según país de origen
+
+```{r graf_5.13, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Creación de un vector con las nacionalidades seleccionadas
+nacionalidades <- c("Brasil", "Paraguay", "Chile", "Perú", "Venezuela", "Uruguay", "Bolivia", 
+                    "Colombia", "Italia", "España", "Haití", "Senegal")
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q3_pais_nacimiento= na_if(q3_pais_nacimiento, "")) %>% 
+  mutate(q58_envio_dinero= na_if(q58_envio_dinero, ""))
+
+# Gráfico 5.13
+grafico_5.13<-enma1 %>% 
+  filter(!is.na(q58_envio_dinero) & 
+         q58_envio_dinero != "Prefiero no responder" & 
+         q3_pais_nacimiento %in% nacionalidades) %>%  
+  group_by(q3_pais_nacimiento, q58_envio_dinero) %>%  # Agrupar por nacionalidad y envío de remesas
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  
+  group_by(q3_pais_nacimiento) %>% #Agruoa solo por nacionalidad
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% #Calcula porcentajes dentro de cada categoría
+  select("Nacionalidad" = q3_pais_nacimiento, q58_envio_dinero, Porcentaje) %>%  # Mantener solo las columnas necesarias
+  pivot_wider(names_from = q58_envio_dinero, values_from = Porcentaje, values_fill = 0)   # Convertir en tabla de doble entrada
+
+# Imprimir la tabla
+knitr::kable(grafico_5.13) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 5.14: Estrategias financieras utilizadas por la población migrante para cubrir sus gastos diarios en el último año (en porcentaje)
+
+```{r graf_5.14, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q59_gastos= na_if(q59_gastos, ""))
+
+
+# Gráfico 5.14
+grafico_5.14<-enma1 %>% 
+  filter(!is.na(q59_gastos)) %>%  #Filtra datos válidos
+  # Convertir variables en binarias
+  mutate(
+    decapitalizacion=ifelse(q59_gastos_ahorros==1 | q59_gastos_venta_pertenencias==1,1,0),
+    endeudamiento_informal=ifelse(q59_gastos_préstamos_entorno==1 | q59_gastos_fiado==1,1,0),
+    endeudamiento_formal=ifelse(q59_gastos_préstamos_bancos==1 | q59_gastos_cuotas==1,1,0),
+    ayudas=ifelse(q59_gastos_ayuda_estatal==1 | q59_gastos_ayuda_organizaciones==1,1,0),
+    no_responder=ifelse(q59_gastos_prefiero_no==1,1,0),
+    ninguna=ifelse(q59_gastos_ninguna==1,1,0)) %>% 
+  # Calcular el total ponderado de la población y de cada tipo de situación
+  summarise(
+    Poblacion = round(sum(weightvec, na.rm = TRUE), 0),
+    decapitalizacion=round(sum(weightvec*decapitalizacion, na.rm = TRUE),0),
+    endeudamiento_informal=round(sum(weightvec*endeudamiento_informal, na.rm = TRUE),0),
+    endeudamiento_formal=round(sum(weightvec*endeudamiento_formal, na.rm = TRUE),0),
+    ayudas=round(sum(weightvec*ayudas, na.rm = TRUE),0),
+    no_responder=round(sum(weightvec*no_responder, na.rm = TRUE),0),
+    ninguna=round(sum(weightvec*ninguna, na.rm = TRUE),0)) %>% 
+  # Calcular los porcentajes de cada situación sobre el total de la población
+  mutate(
+    Descapitalización= round(decapitalizacion / Poblacion * 100, 1),
+    `Endeudamiento informal` = round(endeudamiento_informal / Poblacion * 100, 1),
+    `Endeudamiento formal` = round(endeudamiento_formal / Poblacion * 100, 1),
+    `Recurrir a ayudas` = round(ayudas / Poblacion * 100, 1),
+    `Prefiero no responder` = round(no_responder / Poblacion * 100, 1),
+    `Ninguna de las anteriores` = round(ninguna / Poblacion * 100, 1)) %>% 
+  select(8:13) %>% # Seleccionar solo las columnas con los porcentajes calculados
+  pivot_longer(cols = everything(), names_to = "Estrategias", values_to = "Porcentaje") %>%   # Convertir de formato ancho a largo
+  arrange(desc(Porcentaje))# Ordenar de mayor a menor porcentaje
+
+# Imprimir la tabla
+knitr::kable(grafico_5.14) %>%
+  kable_minimal()
+
+```
+
+
+#Gráfico 5.15: Estrategias financieras utilizadas por la población migrante para cubrir sus gastos diarios en el último año según su género (en porcentaje)
+
+```{r graf_5.15, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q59_gastos= na_if(q59_gastos, ""))
+
+# Gráfico 5.15
+grafico_5.15<-enma1 %>% 
+  filter(!is.na(q59_gastos) & (genero_agrup=="Mujer" | genero_agrup=="Varón")) %>%  #Filtra datos
+  # Convertir variables en binarias
+  mutate(
+    decapitalizacion=ifelse(q59_gastos_ahorros==1 | q59_gastos_venta_pertenencias==1,1,0),
+    endeudamiento_informal=ifelse(q59_gastos_préstamos_entorno==1 | q59_gastos_fiado==1,1,0),
+    endeudamiento_formal=ifelse(q59_gastos_préstamos_bancos==1 | q59_gastos_cuotas==1,1,0),
+    ayudas=ifelse(q59_gastos_ayuda_estatal==1 | q59_gastos_ayuda_organizaciones==1,1,0),
+    no_responder=ifelse(q59_gastos_prefiero_no==1,1,0),
+    ninguna=ifelse(q59_gastos_ninguna==1,1,0)) %>% 
+  group_by(genero_agrup) %>% 
+  # Calcular el total ponderado de la población y de cada tipo de situación
+  summarise(
+    Poblacion = round(sum(weightvec, na.rm = TRUE), 0),
+    decapitalizacion=round(sum(weightvec*decapitalizacion, na.rm = TRUE),0),
+    endeudamiento_informal=round(sum(weightvec*endeudamiento_informal, na.rm = TRUE),0),
+    endeudamiento_formal=round(sum(weightvec*endeudamiento_formal, na.rm = TRUE),0),
+    ayudas=round(sum(weightvec*ayudas, na.rm = TRUE),0),
+    no_responder=round(sum(weightvec*no_responder, na.rm = TRUE),0),
+    ninguna=round(sum(weightvec*ninguna, na.rm = TRUE),0)) %>% 
+  # Calcular los porcentajes de cada situació sobre el total de la población
+  mutate(
+    Descapitalización= round(decapitalizacion / Poblacion * 100, 1),
+    `Endeudamiento informal` = round(endeudamiento_informal / Poblacion * 100, 1),
+    `Endeudamiento formal` = round(endeudamiento_formal / Poblacion * 100, 1),
+    `Recurrir a ayudas` = round(ayudas / Poblacion * 100, 1),
+    `Prefiero no responder` = round(no_responder / Poblacion * 100, 1),
+    `Ninguna de las anteriores` = round(ninguna / Poblacion * 100, 1)) %>% 
+  select("Género"=1, 9:14) # Seleccionar solo las columnas con los porcentajes calculados
+
+# Imprimir la tabla
+knitr::kable(grafico_5.15) %>%
+  kable_minimal()
+
+```
+
+
+## Gráfico 5.16: Percepción de prestaciones sociales de la población migrante según género (en porcentaje). Pregunta de selección múltiple
+
+```{r graf_5.16, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q60_subsidios= na_if(q60_subsidios, ""))
+
+
+# Gráfico 5.16
+grafico_5.16<-enma1 %>% 
+  filter(!is.na(q60_subsidios) & (genero_agrup=="Mujer" | genero_agrup=="Varón")) %>% #Filtra datos 
+  # Convertir variables en binarias
+  mutate(
+    q60_subsidios_no=ifelse(q60_subsidios_no==1,1,0),
+    q60_subsidios_auh=ifelse(q60_subsidios_auh==1,1,0),
+    q60_subsidios_potenciar_trabajo=ifelse(q60_subsidios_potenciar_trabajo==1,1,0),
+    q60_subsidios_tarjeta_alimentar=ifelse(q60_subsidios_tarjeta_alimentar==1,1,0),
+    q60_subsidios_jubilacion=ifelse(q60_subsidios_jubilacion==1,1,0),
+    q60_subsidios_prefiero_no=ifelse(q60_subsidios_prefiero_no==1,1,0)) %>% 
+  group_by(genero_agrup) %>% 
+  # Calcular el total ponderado de la población y de cada tipo de subsidio
+  summarise(
+    Poblacion = round(sum(weightvec, na.rm = TRUE), 0),
+    ninguno=round(sum(weightvec*q60_subsidios_no, na.rm = TRUE),0),
+    auh=round(sum(weightvec*q60_subsidios_auh, na.rm = TRUE),0),
+    pot_trab=round(sum(weightvec*q60_subsidios_potenciar_trabajo, na.rm = TRUE),0),
+    tarj_alim=round(sum(weightvec*q60_subsidios_tarjeta_alimentar, na.rm = TRUE),0),
+    jubilacion=round(sum(weightvec*q60_subsidios_jubilacion, na.rm = TRUE),0),
+    no_responder=round(sum(weightvec*q60_subsidios_prefiero_no, na.rm = TRUE),0)) %>% 
+  # Calcular los porcentajes de cada tipo de subsidio sobre el total de la población
+  mutate(
+    'No percibo ningún subsidio o prestación estatal'= round(ninguno / Poblacion * 100, 1),
+    'Asignación Universal por Hijo (AUH)' = round(auh / Poblacion * 100, 1),
+    'Potenciar Trabajo' = round(pot_trab / Poblacion * 100, 1),
+    'Tarjeta Alimentar'= round(tarj_alim / Poblacion * 100, 1),
+    'Jubilación universal'= round(jubilacion / Poblacion * 100, 1),
+    'Prefiere no responder' = round(no_responder / Poblacion * 100, 1)) %>% 
+  select("Género"=1, 9:14) # Seleccionar solo las columnas con los porcentajes calculados
+
+# Imprimir la tabla
+knitr::kable(grafico_5.16) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 5.17: Acceso a las principales prestaciones sociales según tiempo de residencia (en porcentaje)
+
+```{r graf_5.17, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q60_subsidios= na_if(q60_subsidios, "")) %>% 
+  mutate(migracion_reciente= na_if(migracion_reciente, ""))
+
+
+# Gráfico 5.17
+grafico_5.17<-enma1 %>% 
+  filter(!is.na(q60_subsidios) & !is.na(migracion_reciente)) %>% #Filtra datos
+# Convertir variables en binarias
+  mutate(
+    q60_subsidios_no=ifelse(q60_subsidios_no==1,1,0),
+    q60_subsidios_auh=ifelse(q60_subsidios_auh==1,1,0),
+    q60_subsidios_potenciar_trabajo=ifelse(q60_subsidios_potenciar_trabajo==1,1,0),
+    q60_subsidios_tarjeta_alimentar=ifelse(q60_subsidios_tarjeta_alimentar==1,1,0),
+    q60_subsidios_jubilacion=ifelse(q60_subsidios_jubilacion==1,1,0),
+    q60_subsidios_progresar=ifelse(q60_subsidios_progresar==1,1,0),
+    migracion_reciente=ifelse(migracion_reciente=="Si", "Migración reciente", "Migración asentada")) %>% 
+  group_by(migracion_reciente) %>%  #Agrupa según tipo de migración
+  # Calcular el total ponderado de la población y de cada tipo de subsidio
+  summarise(
+    Poblacion = round(sum(weightvec, na.rm = TRUE), 0),
+    ninguno=round(sum(weightvec*q60_subsidios_no, na.rm = TRUE),0),
+    auh=round(sum(weightvec*q60_subsidios_auh, na.rm = TRUE),0),
+    pot_trab=round(sum(weightvec*q60_subsidios_potenciar_trabajo, na.rm = TRUE),0),
+    tarj_alim=round(sum(weightvec*q60_subsidios_tarjeta_alimentar, na.rm = TRUE),0),
+    jubilacion=round(sum(weightvec*q60_subsidios_jubilacion, na.rm = TRUE),0),
+    progresar=round(sum(weightvec*q60_subsidios_progresar, na.rm = TRUE),0)) %>% 
+  # Calcular los porcentajes de cada tipo de subsidio sobre el total de la población
+  mutate(
+    'No percibo ningún subsidio o prestación estatal'= round(ninguno / Poblacion * 100, 1),
+    'Asignación Universal por Hijo (AUH)' = round(auh / Poblacion * 100, 1),
+    'Potenciar Trabajo' = round(pot_trab / Poblacion * 100, 1),
+    'Tarjeta Alimentar'= round(tarj_alim / Poblacion * 100, 1),
+    'Jubilación universal'= round(jubilacion / Poblacion * 100, 1),
+    'Progresar' = round(progresar/ Poblacion * 100, 1)) %>% 
+  select("Tiempo de residencia"=1, 9:14) # Seleccionar solo las columnas con los porcentajes calculados
+
+# Imprimir la tabla
+knitr::kable(grafico_5.17) %>%
+  kable_minimal()
+
+```

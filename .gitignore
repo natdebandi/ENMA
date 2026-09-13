@@ -1,0 +1,16 @@
+# Datos: NUNCA entran al repo. La ENMA se solicita por formulario a la fuente.
+data/
+*.csv
+*.sav
+*.dta
+*.xls
+*.xlsx
+
+# Basura de RStudio
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# Sistema
+.DS_Store

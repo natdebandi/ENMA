@@ -1,0 +1,409 @@
+---
+title: 'Capítulo 3: Educación'
+output: html_document
+---
+
+## Instalación y carga de librerías necesarias
+
+```{r librerias, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Cargar librerías
+library(tidyverse)  # Manipulación y visualización de datos
+library(readxl)     # Lectura de archivos Excel
+library(janitor)    # Limpieza y estandarización de nombres de variables
+library(knitr)      # Generación de tablas en documentos dinámicos
+library(kableExtra) # Mejora en la presentación de tablas
+```
+
+## Carga de la base de datos ENMA 2023
+
+```{r carga, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Carga del archivo CSV con la base de datos de la ENMA 2023
+enma <- read.csv("data/ENMA2023_final_public.csv")
+
+# Alternativamente, para leer desde un archivo Excel descomentar la siguiente línea:
+# enma <- read_xlsx("data/ENMA2023_final_public.xlsx", sheet = 1)
+
+
+```
+
+## Exploración inicial de la base de datos
+
+```{r exploración,eval=FALSE, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Mostrar los nombres de las variables en la base de datos
+names(enma)
+
+# Para ver la estructura de la base de datos descomentar la siguiente línea:
+str(enma)
+
+```
+
+## Gráfico 3.1. Población migrante con hijos/as que viven en la Argentina y asisten actualmente a la escuela
+
+```{r graf_3.1, echo=T, message=F, warning=F}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q32_asistencia_educacion = na_if(q32_asistencia_educacion, ""))
+
+# Genera el cuadro 3.1
+grafico_3.1 <- enma1 %>%
+  filter(!is.na(q32_asistencia_educacion)) %>%  # Selecciona información válida
+  group_by(q32_asistencia_educacion) %>%  # Agrupa la información según asistencia escolar
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE)), .groups = "drop") %>%  # Calcula el total para cada categoría
+  mutate(Porcentaje = round((Cantidad / sum(Cantidad)) * 100, 1)) %>%  # Calcula el porcentaje para cada categoría
+  arrange(desc(Porcentaje)) %>%  # Ordena de mayor a menor la información
+  rename("Asistencia a la escuela" = q32_asistencia_educacion)  # Renombra la variable
+
+# Imprimir la tabla
+knitr::kable(grafico_3.1) %>% 
+  kable_minimal()
+
+
+```
+
+## Gráfico 3.2. Población migrante con hijos/as que viven en la Argentina y asisten actualmente a la escuela por región de residencia
+
+```{r graf_3.2, echo=T, message=F, warning=F}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q32_asistencia_educacion = na_if(q32_asistencia_educacion, ""))
+
+# Gráfico 3.2
+grafico_3.2 <- enma1 %>%
+  # Filtrar valores no deseados
+  filter(q29_hijos_num == "Si" & !is.na(q32_asistencia_educacion) & !is.na(region_amba_agrup)) %>% 
+  group_by(region_amba_agrup, q32_asistencia_educacion) %>%  # Agrupar por región y asistencia educativa
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  # Calcular total ponderado
+  group_by(region_amba_agrup) %>%
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%   # Calcular el porcentaje dentro de cada región
+  filter(q32_asistencia_educacion == "Si, al menos alguno/a") %>%  # Mantener solo los que respondieron "Sí"
+  select("Región de residencia" = region_amba_agrup, Porcentaje) %>%  # Seleccionar solo las columnas necesarias
+  arrange(desc(Porcentaje))  # Ordenar de mayor a menor
+
+# Imprimir la tabla
+knitr::kable(grafico_3.2) %>% 
+  kable_minimal()
+
+```
+
+## Gráfico 3.3. Población migrante con hijos/as que viven en la Argentina por motivos de no asistencia a la escuela
+
+```{r graf3.3, echo=T, message=F, warning=F}
+
+#Convertir campos vacíos en NA
+ enma1 <- enma %>%
+  mutate(q34_asistencia_educacion_razon = na_if(q34_asistencia_educacion_razon, ""))
+
+#Genera gráfico 3.3 
+grafico_3.3 <- enma1 %>% 
+  mutate(q34_agrup=case_when(
+    q34_asistencia_educacion_razon=="Son mayores y ya finalizaron la escuela" ~ "Son mayores y ya finalizaron la escuela",
+    q34_asistencia_educacion_razon=="Aún no están en edad escolar" ~ "Aún no están en edad escolar",
+    is.na(q34_asistencia_educacion_razon) ~ NA,
+    TRUE ~ "Otros motivos")) %>%
+    filter(q29_hijos_num=="Si" & !is.na(q34_asistencia_educacion_razon)) %>% #Selecciona información válida
+  group_by(q34_agrup) %>%  #Agrupa la información según motivos de no asistencia escolar
+  summarise (Cantidad = round(sum(weightvec))) %>% #Calcula el total para cada categoría
+  mutate(Porcentaje=round((Cantidad/sum(Cantidad))*100,1)) %>%  #Calcula el porcentaje para cada categoría
+  arrange(desc(Porcentaje)) %>% #Ordena de mayor a menor la información %>% 
+  rename("Motivos de no asistencia escolar"=q34_agrup) #Renombra la variable
+
+# Imprimir la tabla
+knitr::kable(grafico_3.3) %>% 
+  kable_minimal()
+
+ 
+```
+
+## Gráfico 3.4. Inconvenientes para el acceso a la educación de hijos/as de personas migrantes en la Argentina
+```{r graf_3.4, echo=T, message=F, warning=F}
+
+#Convertir campos vacíos en NA
+ enma1 <- enma %>%
+  mutate(q33_incoveniente_educacion = na_if(q33_incoveniente_educacion, ""))
+
+grafico_3.4 <- enma1 %>%
+  # Filtrar la población con al menos un inconveniente
+  filter(!is.na(q33_incoveniente_educacion) & 
+         q33_incoveniente_educacion_no != 1) %>%
+  # Calcular el total ponderado de la población y de cada tipo de inconveniente
+  summarise(
+    Poblacion = round(sum(weightvec, na.rm = TRUE), 0),
+    cupo = round(sum(weightvec * (q33_incoveniente_educacion_cupo == 1), na.rm = TRUE), 0),
+    inscripcion = round(sum(weightvec * (q33_inconveniente_educacion_inscripcion == 1), na.rm = TRUE), 0),
+    dni = round(sum(weightvec * (q33_inconveniente_educacion_dni == 1), na.rm = TRUE), 0),
+    doc_origen = round(sum(weightvec * (q33_inconveniente_educacion_documentacion_origen == 1), na.rm = TRUE), 0),
+    doc_arg = round(sum(weightvec * (q33_inconveniente_educacion_documentacion_argentina == 1), na.rm = TRUE), 0),
+    doc_otro = round(sum(weightvec * (q33_inconveniente_educacion_otro == 1), na.rm = TRUE), 0)) %>%
+  # Calcular los porcentajes de cada inconveniente sobre el total de la población con dificultades
+  mutate(
+    `Problemas de cupo en la escuela` = round(cupo / Poblacion * 100, 1),
+    `Falta de DNI Argentino` = round(dni / Poblacion * 100, 1),
+    `No supe hacer la inscripción` = round(inscripcion / Poblacion * 100, 1),
+    `Problemas con la documentación de país de origen` = round(doc_origen / Poblacion * 100, 1),
+    `Falta de documentación escolar argentina` = round(doc_arg / Poblacion * 100, 1),
+    `Otros problemas` = round(doc_otro / Poblacion * 100, 1)) %>%
+  select(8:13) %>%
+  pivot_longer(cols = everything(), names_to = "Inconveniente", values_to = "Porcentaje")
+  
+# Imprimir la tabla
+knitr::kable(grafico_3.4) %>% 
+  kable_minimal()
+
+```
+
+## Gráfico 3.5. Población migrante cuyos/as hijos/as han experimentado alguna situación de discriminación por su condición de migrante y/o aspecto físico en la escuela en la Argentina 
+
+```{r graf_3.5, echo=T, message=F, warning=F}
+
+# Convierte campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q35_educacion_discriminacion = na_if(q35_educacion_discriminacion, ""))
+
+# Genera el cuadro 3.5 
+grafico_3.5 <- enma1 %>% 
+  filter(!is.na(q35_educacion_discriminacion)) %>%  #Selecciona información válida
+  group_by(q35_educacion_discriminacion) %>%  #Agrupa la información según situación de discriminación
+  summarise(Cantidad = round(sum(weightvec), 0)) %>%  #Calcula el total para cada categoría
+  mutate(Porcentaje = round((Cantidad / sum(Cantidad)) * 100, 1)) %>%  #Calcula el porcentaje para cada categoría
+  arrange(desc(Porcentaje)) %>%  #Ordena de mayor a menor la información
+  rename("Experimento alguna situación de discriminación" = q35_educacion_discriminacion)  #Renombra la variable
+
+# Imprimir la tabla
+knitr::kable(grafico_3.5) %>% 
+  kable_minimal()
+
+
+```
+
+## Gráfico 3.6. Población migrante cuyos hijos/as han experimentado alguna situación de discriminación por su condición de migrante y/o aspecto físico en la escuela por nacionalidad agrupada
+
+```{r graf_3.6, echo=T, message=F, warning=F}
+
+# Convierte campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q35_educacion_discriminacion = na_if(q35_educacion_discriminacion, ""))
+
+#Gráfico_3.6
+grafico_3.6 <- enma1 %>%
+  filter(!is.na(q35_educacion_discriminacion) & !is.na(nacionalidad_agrup) & nacionalidad_agrup != "APÁTRIDA") %>%
+  group_by(nacionalidad_agrup, q35_educacion_discriminacion) %>%
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%
+  group_by(nacionalidad_agrup) %>%
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%
+  select(-Cantidad) %>%  # Eliminar la columna de cantidad para solo dejar porcentajes
+  pivot_wider(names_from = q35_educacion_discriminacion, values_from = Porcentaje, values_fill = NA) %>% 
+  arrange(nacionalidad_agrup) %>%   # Ordenar las nacionalidades alfabéticamente
+  rename("Región de origen"=1)
+
+# Imprimir la tabla
+knitr::kable(grafico_3.6) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 3.7. Población migrante cuyos/as hijos/as han experimentado alguna situación de discriminación en la escuela por ascendencia étnica
+
+```{r graf_3.7, echo=T, message=F, warning=F}
+
+# Convierte campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q35_educacion_discriminacion = na_if(q35_educacion_discriminacion, ""))
+
+#Gráfico 3.7
+grafico_3.7 <- enma1 %>%
+  mutate(Ascendencia = case_when(
+    q5_descendencia_afro == 1  ~ "Ascendencia afro",
+    q5_descendencia_indigena == 1 ~ "Ascendencia indígena",
+    q5_descendencia_ninguno == 1 ~ "Ascendencia no especificada",
+    TRUE ~ NA_character_
+  )) %>%  # Construye variable "Ascendencia"
+  filter(!is.na(Ascendencia) & !is.na(q35_educacion_discriminacion)) %>%
+  group_by(Ascendencia, q35_educacion_discriminacion) %>%
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%
+  group_by(Ascendencia) %>%
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%
+  select(Ascendencia, q35_educacion_discriminacion, Porcentaje) %>%
+  pivot_wider(names_from = q35_educacion_discriminacion, values_from = Porcentaje, values_fill = 0) %>%
+  mutate(Ascendencia = factor(Ascendencia, levels = c("Ascendencia indígena", "Ascendencia afro", "Ascendencia no especificada"))) %>%
+  arrange(Ascendencia)  # Ordenar ascendencia
+
+
+
+# Imprimir la tabla
+knitr::kable(grafico_3.7) %>% 
+  kable_minimal() 
+
+
+```
+
+## Gráfico 3.8. Población migrante que estudia actualmente en la Argentina**
+
+```{r graf_3.8, echo=T, message=F, warning=F}
+
+# Genera el cuadro 3.8
+grafico_3.8 <- enma %>% 
+  group_by(q47_estudiando_argentina) %>%  # Agrupa la información según si está estudiando
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE))) %>% # Calcula el total para cada categoría
+  mutate(Porcentaje = round((Cantidad / sum(Cantidad)) * 100, 1)) %>%  # Calcula el porcentaje
+  arrange(desc(Porcentaje)) %>%  # Ordena de mayor a menor la información
+  rename("Población migrante que estudia" = q47_estudiando_argentina)  # Renombra la variable
+
+# Imprimir la tabla
+knitr::kable(grafico_3.8) %>% 
+  kable_minimal() 
+
+```
+
+## Gráfico 3. 9. Población migrante que estudia, por región de residencia**
+
+```{r graf_3.9, echo=T, message=F, warning=F}
+
+#Gráfico_3.9
+grafico_3.9 <- enma1 %>%
+  filter(!is.na(region_amba_agrup)) %>%
+  group_by(region_amba_agrup, q47_estudiando_argentina) %>%
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%
+  group_by(region_amba_agrup) %>%
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% 
+  select(-Cantidad) %>%  # Eliminar la columna de cantidad para solo dejar porcentajes
+  pivot_wider(names_from = q47_estudiando_argentina, values_from = Porcentaje, values_fill = NA) %>% 
+  select("Región de residencia"=1, "Porcentaje"=3) %>% 
+  arrange(desc(Porcentaje))
+
+# Imprimir la tabla
+knitr::kable(grafico_3.9) %>% 
+  kable_minimal()  
+
+```
+
+## Gráfico 3.10. Población migrante que estudia en la Argentina, por nacionalidad
+
+```{r graf_3.10, echo=T, message=F, warning=F}
+
+# Creación de un vector con las nacionalidades seleccionadas
+nacionalidades <- c("Italia", "Brasil", "Paraguay", "Chile", "España", 
+                    "Perú", "Venezuela", "Uruguay", "Bolivia", "Colombia")
+
+#Gráfico_3.10
+grafico_3.10 <- enma1 %>%
+  filter(q3_pais_nacimiento %in% nacionalidades) %>%
+  group_by(q3_pais_nacimiento, q47_estudiando_argentina) %>%
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%
+  group_by(q3_pais_nacimiento) %>%
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% 
+  select(-Cantidad) %>%  # Eliminar la columna de cantidad para solo dejar porcentajes
+  pivot_wider(names_from = q47_estudiando_argentina, values_from = Porcentaje, values_fill = NA) %>% 
+  select("Nacionalidad"=1, "Porcentaje"=3) %>% 
+  arrange(desc(Porcentaje))
+
+# Imprimir la tabla 
+knitr::kable(grafico_3.10) %>% 
+  kable_minimal()  
+
+
+```
+
+## Gráfico 3.11. Población migrante que estudia en la Argentina, por tipo de estudio que realiza
+
+```{r graf_3.11, echo=T, message=F, warning=F}
+
+# Convierte campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q48_estudiando_nivel = na_if(q48_estudiando_nivel, ""))
+
+grafico_3.11 <- enma1 %>%
+  mutate(
+    q48_estudiando_nivel_prim = ifelse(q48_estudiando_nivel_prim == 1, 1, 0),
+    q48_estudiando_nivel_sec = ifelse(q48_estudiando_nivel_sec == 1, 1, 0),
+    q48_estudiando_nivel_sup = ifelse(q48_estudiando_nivel_ter == 1 | q48_estudiando_nivel_uni==1 | q48_estudiando_nivel_postgrado==1, 1, 0),
+    q48_estudiando_nivel_capacitaciones = ifelse(q48_estudiando_nivel_capacitaciones == 1, 1, 0)
+  ) %>% 
+  filter(!is.na(q48_estudiando_nivel)) %>%
+  summarise(
+    Poblacion = round(sum(weightvec, na.rm = TRUE), 0),
+    Primaria = round(sum(weightvec * q48_estudiando_nivel_prim, na.rm = TRUE), 0),
+    Secundaria = round(sum(weightvec * q48_estudiando_nivel_sec, na.rm = TRUE), 0),
+    Superior = round(sum(weightvec * q48_estudiando_nivel_sup, na.rm = TRUE), 0),
+    Capacitaciones = round(sum(weightvec * q48_estudiando_nivel_capacitaciones, na.rm = TRUE), 0)
+  ) %>%
+  mutate(
+    'Primaria' = round(Primaria / Poblacion * 100, 1),
+    'Secundaria' = round(Secundaria / Poblacion * 100, 1),
+    'Superior' = round(Superior / Poblacion * 100, 1),
+    'Capacitaciones' = round(Capacitaciones / Poblacion * 100, 1)
+  ) %>% 
+  select(-1) %>%
+  pivot_longer(cols = everything(), names_to = "Estudios", values_to = "Porcentaje") %>%
+  arrange((Porcentaje))  # Ordena de mayor a menor
+
+
+# Imprimir la tabla
+knitr::kable(grafico_3.11) %>% 
+  kable_minimal()  
+
+```
+
+## Gráfico 3.12. Población migrante que estudia en la Argentina, por inconvenientes para la inscripción
+
+```{r graf_3.12, echo=T, message=F, warning=F}
+
+# Convierte campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q49_estudiando_inconvenientes = na_if(q49_estudiando_inconvenientes, ""))
+
+# Genera el gráfico 3.12
+grafico_3.12 <- enma1 %>% 
+  filter(q47_estudiando_argentina == "Si" & !is.na(q49_estudiando_inconvenientes)) %>%  # Filtra datos
+  group_by(q49_estudiando_inconvenientes) %>%  # Agrupa la información 
+  summarise(Cantidad = round(sum(weightvec))) %>%  # Calcula el total para cada categoría
+  mutate(Porcentaje = round((Cantidad / sum(Cantidad)) * 100, 1)) %>%  # Calcula el porcentaje
+  arrange(desc(Porcentaje)) %>%  # Ordena de mayor a menor
+  rename("Inconvenientes para la inscripción" = q49_estudiando_inconvenientes)  # Renombra la columna
+
+# Imprimir la tabla
+knitr::kable(grafico_3.12) %>% 
+  kable_minimal()
+
+ 
+```
+
+## Gráfico 3.13. Tipo de inconvenientes para la inscripción en nivel educativo superior (valores absolutos)
+
+```{r graf_3.13, echo=T, message=F, warning=F}
+
+# Convierte campos vacíos de la variable q50 en NA
+enma1 <- enma %>%
+  mutate(q50_estudiando_problemas = na_if(q50_estudiando_problemas, ""))
+
+# Genera el gráfico 3.13
+grafico_3.13 <- enma1 %>%
+  filter(!is.na(q50_estudiando_problemas)) %>%  # Filtra respuestas válidas
+  summarise(
+    Total = round(sum(weightvec), 0),
+    'Con los títulos y competencias del país de origen' = round(sum(weightvec[q50_problemas_titulos_origen == 1]), 0),
+    'Por no tener DNI argentino' = round(sum(weightvec[q50_problemas_dni == 1]), 0),
+    'Falta de documentación escolar argentina' = round(sum(weightvec[q50_problemas_doc_escolar == 1]), 0),
+    'Con la inscripción online' = round(sum(weightvec[q50_problemas_inscripcion_online == 1]), 0),
+    'Costos' = round(sum(weightvec[q50_problemas_costos == 1]), 0),
+    'Discriminación y xenofobia en los servicios de atención' = round(sum(weightvec[q50_problemas_discriminacion == 1]), 0),
+    'Otros problemas' = round(sum(weightvec[q50_problemas_otros == 1]), 0)
+  ) %>%
+  pivot_longer(cols = -Total, names_to = "Inconvenientes", values_to = "Cantidad") %>%  # Convierte columnas en filas
+  # Crear una columna de orden para asegurarse de que "Otros problemas" esté al final
+  mutate(Orden = ifelse(Inconvenientes == "Otros problemas", 999, 0)) %>% 
+  arrange(Orden, desc(Cantidad)) %>%  # Ordena por 'Orden' y luego por 'Cantidad' de mayor a menor
+  select(-1,-Orden)  # Elimina columnas
+
+# Imprimir la tabla
+knitr::kable(grafico_3.13) %>%
+  kable_minimal()  
+
+
+
+```
+

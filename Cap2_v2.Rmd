@@ -1,0 +1,591 @@
+---
+title: "Anuario ENMA 2023 - Capítulo 2"
+output: html_document
+---
+
+## Instalación y carga de librerías necesarias
+
+```{r librerias, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Cargar librerías
+library(tidyverse)  # Manipulación y visualización de datos
+library(readxl)     # Lectura de archivos Excel
+library(janitor)    # Limpieza y estandarización de nombres de variables
+library(knitr)      # Generación de tablas en documentos dinámicos
+library(kableExtra) # Mejora en la presentación de tablas
+```
+
+
+## Carga de la base de datos ENMA 2023
+
+```{r carga, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Carga del archivo CSV con la base de datos de la ENMA 2023
+enma <- read.csv("data/ENMA2023_final_public.csv")
+
+# Alternativamente, para leer desde un archivo Excel descomentar la siguiente línea:
+# enma <- read_xlsx("data/ENMA2023_final_public.xlsx", sheet = 1)
+
+
+```
+
+## Exploración inicial de la base de datos
+
+```{r exploración, eval=FALSE, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Mostrar los nombres de las variables en la base de datos
+names(enma)
+
+# Para ver la estructura de la base de datos descomentar la siguiente línea:
+str(enma)
+
+```
+
+## Gráfico 2.1.2: Tenencia DNI según tiempo de residencia (en porcentaje)
+
+```{r graf_2.1.2, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Gráfico 2.1.2
+grafico_2.1.2 <- enma %>%
+  # Crear una nueva variable agrupando el año de llegada en categorías específicas
+  mutate(q13_agrup = case_when(
+    q13_anio_llegada >= 2022 ~ "Hasta 1 año",                           # Llegaron en 2022 o después
+    q13_anio_llegada == 2021 ~ "Más de 1 año y hasta 2 años",          # Llegaron en 2021
+    q13_anio_llegada >= 2018 & q13_anio_llegada <= 2020 ~ "3-5 años",  # Llegaron entre 2018 y 2020
+    q13_anio_llegada >= 2014 & q13_anio_llegada <= 2017 ~ "6-9 años",  # Llegaron entre 2014 y 2017
+    q13_anio_llegada <= 2013 ~ "10 años y más",                        # Llegaron en 2013 o antes
+    TRUE ~ NA_character_  # Si no cumple ninguna condición, asigna NA
+  )) %>%
+  filter(!is.na(q13_agrup), !is.na(q17_dni_tenencia)) %>%  #Filtra datos
+  group_by(q13_agrup, q17_dni_tenencia) %>%   # Agrupar por el tiempo de residencia y la tenencia de DNI
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE)), .groups = "drop") %>% # Sumar los pesos de la muestra dentro de cada grupo
+  group_by(q13_agrup) %>%   # Calcular el porcentaje dentro de cada grupo de "Tiempo de residencia"
+  mutate(Porcentaje = round((Cantidad / sum(Cantidad)) * 100, 1)) %>%  
+  select(-Cantidad) %>%  # Eliminar la columna "Cantidad"
+  pivot_wider(names_from = q17_dni_tenencia, values_from = Porcentaje, values_fill = 0) %>% #Transforma la tabla en formato de doble entrada
+  arrange(desc(`Si`)) %>%   #Ordena de forma descendente
+  rename("Tiempo de residencia" = q13_agrup) #Renombra variable
+
+# Imprimir la tabla
+knitr::kable(grafico_2.1.2) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 2.1.3: Porcentaje de población sin DNI según región de origen
+
+```{r graf_2.1.3, echo=TRUE, message=FALSE, warning=FALSE}
+
+#Gráfico 2.1.3
+grafico_2.1.3<- enma %>%
+  filter(nacionalidad_agrup != "APÁTRIDA" & !is.na(nacionalidad_agrup) & !is.na(q17_dni_tenencia)) %>% #Filtra datos
+  group_by(nacionalidad_agrup, q17_dni_tenencia) %>%  #Agrupa datos
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE)), .groups = "drop") %>% #Calcula cantidad ponderada para cada grupo
+  group_by(nacionalidad_agrup) %>%  #Calcula porcentaje dentro de cada nacionalidad
+  mutate(Porcentaje = round((Cantidad / sum(Cantidad)) * 100, 1)) %>%  
+  select(-Cantidad) %>%  #Elimina variable cantidad
+  pivot_wider(names_from = q17_dni_tenencia, values_from = Porcentaje, values_fill = 0) %>% #Transforma la tabla en formato de doble entrada
+  arrange((`Si`)) %>%   # Ordena por el valor de "Sí" de mayor a menor
+  rename("Región de origen"=nacionalidad_agrup) #Renombra variable
+
+
+# Imprimir la tabla
+knitr::kable(grafico_2.1.3) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 2.1.4: Personas migrantes sin DNI Mercosur, según nacionalidad de origen (en porcentaje)
+
+```{r graf_2.1.4, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Creación de un vector con las nacionalidades seleccionadas
+nacionalidades <- c("Brasil", "Paraguay", "Chile", "Perú", "Venezuela", "Uruguay", "Bolivia", 
+                    "Colombia")
+
+#Gráfico 2.1.4
+grafico_2.1.4<- enma %>%
+  filter(!is.na(q17_dni_tenencia) & q3_pais_nacimiento %in% nacionalidades)%>% #Filtra datos
+  group_by(q3_pais_nacimiento, q17_dni_tenencia) %>%  #Agrupa datos
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE)), .groups = "drop") %>% #Calcula la cantidad ponderada de cada grupo
+  group_by(q3_pais_nacimiento) %>%  #Agrupa por nacionalidad y calcula porcentaje
+  mutate(Porcentaje = round((Cantidad / sum(Cantidad)) * 100, 1)) %>%  
+  select(-Cantidad) %>%  #Elimina columna cantidad
+  pivot_wider(names_from = q17_dni_tenencia, values_from = Porcentaje, values_fill = 0) %>% #Transforma la tabla en formato de doble entrada
+  arrange((`Si`)) %>%   # Ordena por el valor de "Sí" de mayor a menor
+  rename("Nacionalidad"=q3_pais_nacimiento) #Renombra variable
+
+# Imprimir la tabla
+knitr::kable(grafico_2.1.4) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 2.1.6: Situación documentaria según tiempo de residencia (en porcentaje)
+
+```{r graf_2.1.6, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(tiempo_residencia_agrup = na_if(tiempo_residencia_agrup, ""))
+
+#Gráfico 2.16
+grafico_2.1.6 <- enma1 %>% 
+  mutate(q18_dni_var = case_when(
+    q18_dni_situacion == "A la naturalización" ~ "DNI por naturalización",
+    q18_dni_situacion == "Una radicación permanente" ~ "DNI por radicación permanente",
+    q18_dni_situacion == "Una radicación temporaria" ~ "DNI por radicación temporaria",
+    TRUE ~ NA
+  )) %>%  #Cambio nombre categorías q18
+  filter(!is.na(q18_dni_var) & !is.na(tiempo_residencia_agrup)) %>% #Filtra datos
+  group_by(tiempo_residencia_agrup, q18_dni_var) %>% #Agrupa por tiempo de residencia y situación documentaria
+  summarise(Cantidad = round(sum(weightvec), 0), .groups = "drop") %>% #Calcula la cantidad ponderada de cada categoría
+  group_by(tiempo_residencia_agrup) %>%
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% #Calcula porcentaje dentro de cad grupo de tiempo de residencia
+  select(tiempo_residencia_agrup, q18_dni_var, Porcentaje) %>%  # Dejamos solo las columnas necesarias
+  pivot_wider(names_from = q18_dni_var, values_from = Porcentaje, values_fill = 0) %>%   # Convertimos a tabla de doble entrada
+  rename("Tiempo de residencia"=tiempo_residencia_agrup) #Renombra variable
+
+# Imprimir la tabla
+knitr::kable(grafico_2.1.6) %>%
+  kable_minimal()
+
+
+```
+
+## Gráfico 2.1.7: Situación documentaria de personas migrantes que no poseen DNI (en porcentaje)
+
+```{r graf_2.1.7, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Gráfico 2.1.7
+grafico_2.1.7 <- enma %>% 
+  filter(!is.na(q19_situacion_documentaria) & 
+         q19_situacion_documentaria != "Otra" & 
+         q19_situacion_documentaria != "Prefiero no responder" & 
+         q17_dni_tenencia == "No") %>%   # Filtrar datos
+  group_by(q19_situacion_documentaria) %>%  #Agrupa por situación documentaria
+  summarise(Cantidad = round(sum(weightvec), 0)) %>% # Calcular el total ponderado de personas en cada categoría
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%  # Calcula el porcentaje de cada categoría
+  arrange(desc(Porcentaje)) %>%  #Ordena en orden descendente
+  rename("Situación documentaria" = q19_situacion_documentaria) #Renombra variable
+
+# Imprimir la tabla
+knitr::kable(grafico_2.1.7) %>%
+  kable_minimal()
+
+
+```
+
+## Gráfico 2.1.8: Dificultad para tramitar/renovar la documentación según tiempo de residencia (en porcentaje)
+
+```{r graf_2.1.8, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(tiempo_residencia_agrup = na_if(tiempo_residencia_agrup, ""))
+
+#Gráfico 2.1.8
+grafico_2.1.8 <- enma1 %>% 
+  filter(!is.na(tiempo_residencia_agrup) & !is.na(q20_dni_dificultad_binaria)) %>%   # Filtrar datos válidos
+  group_by(tiempo_residencia_agrup, q20_dni_dificultad_binaria) %>%  
+  summarise(Cantidad = round(sum(weightvec), 0), .groups = "drop") %>%  # Calcular total ponderado en cada grupo
+  group_by(tiempo_residencia_agrup) %>%  
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%  # Calcular porcentaje dentro de cada categoría de tiempo de residencia
+  filter(q20_dni_dificultad_binaria == "Si") %>%  # Mantener solo los que tuvieron dificultad
+  select(-q20_dni_dificultad_binaria) %>%  # Eliminar columnas innecesarias
+  arrange(desc(Porcentaje)) %>%  # Ordenar de mayor a menor porcentaje
+  rename("Tiempo de residencia" = tiempo_residencia_agrup)  # Renombrar columna
+
+
+# Imprimir la tabla
+knitr::kable(grafico_2.1.8) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 2.1.9: Dificultad para tramitar/renovar la documentación según nacionalidad agrupada (en porcentaje)
+
+```{r graf_2.1.9, echo=TRUE, message=FALSE, warning=FALSE}
+
+
+# Gráfico 2.1.9
+grafico_2.1.9 <- enma %>% 
+  filter(!is.na(nacionalidad_agrup) & nacionalidad_agrup!= "APÁTRIDA" & !is.na(q20_dni_dificultad_binaria)) %>%   # Filtrar datos válidos
+  group_by(nacionalidad_agrup, q20_dni_dificultad_binaria) %>%  
+  summarise(Cantidad = round(sum(weightvec), 0), .groups = "drop") %>%  # Calcular total ponderado en cada grupo
+  group_by(nacionalidad_agrup) %>%  
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%  # Calcular porcentaje dentro de cada categoría de región de origen
+  filter(q20_dni_dificultad_binaria == "Si") %>%  # Mantener solo los que tuvieron dificultad
+  select(-q20_dni_dificultad_binaria) %>%  # Eliminar columnas innecesarias
+  arrange(desc(Porcentaje)) %>%  # Ordenar de mayor a menor
+  rename("Región de origen" = nacionalidad_agrup)  # Renombrar columna
+
+
+# Imprimir la tabla
+knitr::kable(grafico_2.1.9) %>%
+  kable_minimal()
+
+
+```
+
+## Gráfico 2.1.10: Tipos de dificultades para tramitar/renovar la documentación encontradas (en porcentaje)
+
+```{r graf_2.1.10, echo=TRUE, message=FALSE, warning=FALSE}
+
+#Gráfico 2.1.10
+grafico_2.1.10 <- enma %>%
+  # Convertir variables en binarias (1 si hubo dificultad, 0 en caso contrario)
+  mutate(
+    q21_dni_dificultad_turnos = ifelse(q21_dni_dificultad_turnos == 1, 1, 0),
+    q21_dni_dificultad_demora = ifelse(q21_dni_dificultad_demora == 1, 1, 0),
+    q21_dni_dificultad_internet = ifelse(q21_dni_dificultad_internet == 1, 1, 0),
+    q21_dni_dificultad_costo = ifelse(q21_dni_dificultad_costo == 1, 1, 0),
+    q21_dni_dificultad_turnos.1 = ifelse(q21_dni_dificultad_turnos.1 == 1, 1, 0),  # RADEX
+    q21_dni_dificultad_documentacion_origen = ifelse(q21_dni_dificultad_documentacion_origen == 1, 1, 0),
+    q21_dni_dificultad_falta_info = ifelse(q21_dni_dificultad_falta_info == 1, 1, 0),
+    q21_dni_dificultad_identidad_genero = ifelse(q21_dni_dificultad_identidad_genero == 1, 1, 0),
+    q21_dni_dificultad_otros = ifelse(q21_dni_dificultad_otros == 1, 1, 0)
+  ) %>%
+  filter(q20_dni_dificultad_binaria == "Si" & !is.na(q21_dni_dificultad)) %>% #Filtrar datos
+  # Calcular el total ponderado de la población y de cada tipo de dificultad
+  summarise(
+    Poblacion = round(sum(weightvec, na.rm = TRUE),0),
+    turnos = round(sum(weightvec * q21_dni_dificultad_turnos, na.rm = TRUE),0),
+    demora = round(sum(weightvec * q21_dni_dificultad_demora, na.rm = TRUE),0),
+    internet = round(sum(weightvec * q21_dni_dificultad_internet, na.rm = TRUE),0),
+    costo = round(sum(weightvec * q21_dni_dificultad_costo, na.rm = TRUE),0),
+    radex = round(sum(weightvec * q21_dni_dificultad_turnos.1, na.rm = TRUE),0),  
+    doc = round(sum(weightvec * q21_dni_dificultad_documentacion_origen, na.rm = TRUE),0),
+    info = round(sum(weightvec * q21_dni_dificultad_falta_info, na.rm = TRUE),0),
+    genero = round(sum(weightvec * q21_dni_dificultad_identidad_genero, na.rm = TRUE),0),
+    otro = round(sum(weightvec * q21_dni_dificultad_otros, na.rm = TRUE),0)
+  ) %>%
+  # Calcular los porcentajes de cada dificultad sobre el total de la población con dificultades
+  mutate(
+    `Los turnos de Migraciones` = round(turnos / Poblacion * 100, 1),
+    `La demora en los trámites de Migraciones y/o RENAPER` = round(demora / Poblacion * 100, 1),
+    `La falta de internet, teléfono, computadora` = round(internet / Poblacion * 100, 1),
+    `El costo de los trámites` = round(costo / Poblacion * 100, 1),
+    `El sistema online para el trámite (RADEX)` = round(radex / Poblacion * 100, 1),
+    `La documentación de mi país de origen` = round(doc / Poblacion * 100, 1),
+    `La falta de información` = round(info / Poblacion * 100, 1),
+    `La inscripción de mi identidad de género` = round(genero / Poblacion * 100, 1),
+    `Otro/a` = round(otro / Poblacion * 100, 1)
+  ) %>% 
+  select(11:19) %>% 
+  pivot_longer(cols = everything(), names_to = "Dificultad", values_to = "Porcentaje") %>% # Convertir de formato ancho a largo
+ arrange(desc(Porcentaje)) #Orden descendente
+
+# Imprimir la tabla
+knitr::kable(grafico_2.1.10) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 2.1.11: Dificultad para tramitar/renovar la documentación según región de residencia
+
+```{r graf_2.1.11, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Gráfico 2.1.11
+grafico_2.1.11 <- enma %>% 
+  filter(!is.na(region_amba_agrup) & !is.na(q20_dni_dificultad_binaria)) %>%  # Filtrar datos válidos
+  group_by(region_amba_agrup, q20_dni_dificultad_binaria) %>%  
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  # Sumar ponderación
+  group_by(region_amba_agrup) %>%  
+  mutate(Porcentaje = round((Cantidad / sum(Cantidad)) * 100, 1)) %>%  # Calcular % dentro de cada región
+  select(-Cantidad) %>%  # Eliminar columna de cantidades
+  pivot_wider(names_from = q20_dni_dificultad_binaria, values_from = Porcentaje, values_fill = 0) %>%  # Convertir a formato de tabla
+  rename("Región de residencia" = region_amba_agrup)  # Renombrar variable
+
+ 
+# Imprimir la tabla
+knitr::kable(grafico_2.1.11) %>%
+  kable_minimal()
+
+```
+
+
+# Acceso a la naturalización
+
+## Gráfico 2.2.1: Acceso a la naturalización (en porcentaje)
+
+```{r graf_2.2.1, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Gráfico 2.2.1
+grafico_2.2.1 <- enma %>% 
+  mutate(q25_naturalizacion=case_when(
+    q25_naturalizacion=="Sí, pero no quiero naturalizarme" | q25_naturalizacion=="No, y no tengo intención de naturalizarme" ~ "No quiere naturalizarse",
+    q25_naturalizacion=="Sí, pero no entiendo bien en qué consiste el trámite" | q25_naturalizacion=="No, y tendría interés en naturalizarme"~ "Le falta información",
+    q25_naturalizacion=="Sí, ya estoy naturalizado/a"~"Naturalizado/a",
+    q25_naturalizacion=="Sí, ya inicié el trámite de naturalización"~ "Inició trámite naturalización",
+    q25_naturalizacion=="Sí, pero no cumplo con los requisitos"~ "No cumple con requisitos",
+    TRUE ~ NA_character_)) %>% 
+  filter(!is.na(q25_naturalizacion)) %>%  # Filtrar datos válidos
+  group_by(q25_naturalizacion) %>%  
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  # Sumar ponderación
+  mutate(Porcentaje = round((Cantidad / sum(Cantidad)) * 100, 1)) %>%  # Calcular % dentro de cada región
+  arrange(desc(Porcentaje)) %>% 
+  rename("Acceso a la naturalización" = q25_naturalizacion)  # Renombrar variable
+
+ 
+# Imprimir la tabla
+knitr::kable(grafico_2.2.1) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 2.2.2: Naturalización según tiempo de residencia (en porcentaje)
+
+```{r graf_2.2.2, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(tiempo_residencia_agrup = na_if(tiempo_residencia_agrup, ""))
+
+# Gráfico 2.2.2
+grafico_2.2.2 <- enma1 %>% 
+  mutate(q25_naturalizacion = case_when(
+    q25_naturalizacion %in% c("Sí, pero no quiero naturalizarme", "No, y no tengo intención de naturalizarme") ~ "No quiere naturalizarse",
+    q25_naturalizacion %in% c("Sí, pero no entiendo bien en qué consiste el trámite", "No, y tendría interés en naturalizarme") ~ "Le falta información",
+    q25_naturalizacion == "Sí, ya estoy naturalizado/a" ~ "Naturalizado/a",
+    q25_naturalizacion == "Sí, ya inicié el trámite de naturalización" ~ "Inició trámite naturalización",
+    q25_naturalizacion == "Sí, pero no cumplo con los requisitos" ~ "No cumple con requisitos",
+    TRUE ~ NA_character_
+  )) %>% 
+  filter(!is.na(q25_naturalizacion) & !is.na(tiempo_residencia_agrup)) %>%  # Filtrar datos válidos
+  group_by(tiempo_residencia_agrup, q25_naturalizacion) %>%  
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  # Sumar ponderación
+  group_by(tiempo_residencia_agrup) %>%  
+  mutate(Porcentaje = round((Cantidad / sum(Cantidad)) * 100, 1)) %>%  # Calcular % dentro de cada categoría de tiempo de residencia
+  select(-Cantidad) %>%  # Eliminar columna de cantidades
+  pivot_wider(names_from = tiempo_residencia_agrup, values_from = Porcentaje, values_fill = 0) %>%  # Transformar a tabla de doble entrada
+  rename("Acceso a la naturalización" = q25_naturalizacion)  # Renombrar variable
+
+# Imprimir la tabla
+knitr::kable(grafico_2.2.2) %>%
+  kable_minimal()
+
+```
+
+
+## Gráfico 2.2.3: Distribución de la población naturalizada según región de origen (en porcentaje)
+```{r graf_2.2.3, echo=TRUE, message=FALSE, warning=FALSE}
+
+#Gráfico 2.2.3
+grafico_2.2.3 <- enma %>% 
+  filter(q25_naturalizacion == "Sí, ya estoy naturalizado/a" & !is.na(nacionalidad_agrup) & nacionalidad_agrup!="APÁTRIDA") %>% #Filtra datos
+  group_by(nacionalidad_agrup) %>% #Agrupa por nacionalidad agrupada
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  #Calcula distribución
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% #Calcula porcentaje
+  arrange(desc(Porcentaje)) %>%   # Ordenar de mayor a menor 
+  rename("Región de origen"=nacionalidad_agrup)
+
+# Imprimir la tabla
+knitr::kable(grafico_2.2.3) %>%
+  kable_minimal()
+
+```
+
+
+# Derecho al asilo
+
+## Gráfico 2.3.1: Población solicitante de asilo según tiempo de residencia en la Argentina (en porcentaje)
+```{r graf_2.3.1, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(tiempo_residencia_agrup = na_if(tiempo_residencia_agrup, ""))
+
+#Gráfico 2.3.1
+grafico_2.3.1 <- enma1 %>%
+  # Filtrar valores no deseados
+  filter(!is.na(q22_solicitud_asilo) & !is.na(tiempo_residencia_agrup)) %>% 
+  group_by(tiempo_residencia_agrup, q22_solicitud_asilo) %>%  # Agrupar por tiempo de residencia y solicitud de asilo
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  # Calcular total ponderado
+  group_by(tiempo_residencia_agrup) %>%
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%   # Calcular el porcentaje dentro de cada categoría
+  filter(q22_solicitud_asilo == "Si") %>%  # Mantener solo los que respondieron "Sí"
+  select("Tiempo de residencia" = tiempo_residencia_agrup, Porcentaje) %>%  # Seleccionar solo las columnas necesarias
+  arrange(desc(Porcentaje))  # Ordenar de mayor a menor
+
+
+# Imprimir la tabla
+knitr::kable(grafico_2.3.1) %>%
+  kable_minimal()
+
+```
+
+
+## Gráfico 2.3.2: Población solicitante de asilo según tnacionalidad de origen agrupada por región (en porcentaje)
+```{r graf_2.3.2, echo=TRUE, message=FALSE, warning=FALSE}
+
+#Gráfico 2.3.2
+grafico_2.3.2 <- enma1 %>%
+  # Filtrar valores no deseados
+  filter(!is.na(q22_solicitud_asilo) & !is.na(nacionalidad_agrup) & nacionalidad_agrup!="APÁTRIDA") %>% 
+  group_by(nacionalidad_agrup, q22_solicitud_asilo) %>%  # Agrupar por tiempo de residencia y solicitud de asilo
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  # Calcular total ponderado
+  group_by(nacionalidad_agrup) %>%
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%   # Calcular el porcentaje dentro de cada categoría
+  filter(q22_solicitud_asilo == "Si") %>%  # Mantener solo los que respondieron "Sí"
+  select("Región de origen" = nacionalidad_agrup, Porcentaje) %>%  # Seleccionar solo las columnas necesarias
+  arrange(desc(Porcentaje))  # Ordenar de mayor a menor
+
+
+# Imprimir la tabla
+knitr::kable(grafico_2.3.2) %>%
+  kable_minimal()
+
+```
+
+
+
+## Gráfico 2.3.3: Población solicitante de asilo según estado de su solicitud (en porcentaje)
+```{r graf_2.3.3, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable tiempo de residencia agrup en NA
+enma1 <- enma %>%
+  mutate(q23_solicitud_asilo_si = na_if(q23_solicitud_asilo_si, ""))
+
+#Gráfico 2.3.3
+grafico_2.3.3 <- enma1 %>% 
+  mutate(q23_solicitud_asilo_si=case_when(
+    q23_solicitud_asilo_si=="Y me lo otorgaron"  ~ "Otorgada",
+    q23_solicitud_asilo_si=="Y estoy a la espera de la respuesta"  ~ "Pendiente",
+    q23_solicitud_asilo_si=="Pero desistí y no di continuidad al trámite"  ~ "Desistida",
+    q23_solicitud_asilo_si=="Pero luego de analizar la solicitud me lo denegaron"  ~ "Denegada",
+    TRUE  ~ NA_character_
+  )) %>% 
+  filter(q22_solicitud_asilo=="Si" & !is.na(q23_solicitud_asilo_si)) %>%
+  group_by(q23_solicitud_asilo_si) %>%
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  #Calcula distribución
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% #Calcula porcentaje
+  arrange((Porcentaje)) %>%  # Ordenar de mayor a menor porcentaje de solicitudes de asilo
+  rename("Estado solicitud"=q23_solicitud_asilo_si)
+
+# Imprimir la tabla
+knitr::kable(grafico_2.3.3) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 2.3.4: Estado de solicitud de asilo según años de residencia (en porcentaje)
+
+```{r graf_2.3.4, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q23_solicitud_asilo_si = na_if(q23_solicitud_asilo_si, ""))
+
+#Gráfico 2.3.4
+grafico_2.3.4 <- enma1 %>% 
+  mutate(q23_solicitud_asilo_si = case_when(
+    q23_solicitud_asilo_si == "Y me lo otorgaron"  ~ "Otorgada",
+    q23_solicitud_asilo_si == "Y estoy a la espera de la respuesta"  ~ "Pendiente",
+    q23_solicitud_asilo_si == "Pero desistí y no di continuidad al trámite"  ~ "Desistida",
+    q23_solicitud_asilo_si == "Pero luego de analizar la solicitud me lo denegaron"  ~ "Denegada",
+    TRUE  ~ NA_character_
+  )) %>% 
+  filter(q22_solicitud_asilo == "Si" & !is.na(q23_solicitud_asilo_si) & !is.na(tiempo_residencia_agrup)) %>%
+  group_by(tiempo_residencia_agrup, q23_solicitud_asilo_si) %>%
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>% 
+  group_by(tiempo_residencia_agrup) %>%
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%
+  select("Tiempo de residencia"=tiempo_residencia_agrup, q23_solicitud_asilo_si, Porcentaje) %>%
+  pivot_wider(names_from = q23_solicitud_asilo_si, values_from = Porcentaje, values_fill = 0) %>%
+  arrange("Tiempo de residencia") 
+
+
+# Imprimir la tabla
+knitr::kable(grafico_2.3.4) %>%
+  kable_minimal()
+
+```
+
+
+## Gráfico 2.3.5: Estado de solicitud según región de procedencia (en porcentaje)
+
+```{r graf_2.3.5, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q23_solicitud_asilo_si = na_if(q23_solicitud_asilo_si, ""))
+
+#Gráfico 2.3.5
+grafico_2.3.5 <- enma1 %>% 
+  mutate(q23_solicitud_asilo_si = case_when(
+    q23_solicitud_asilo_si == "Y me lo otorgaron"  ~ "Otorgada",
+    q23_solicitud_asilo_si == "Y estoy a la espera de la respuesta"  ~ "Pendiente",
+    q23_solicitud_asilo_si == "Pero desistí y no di continuidad al trámite"  ~ "Desistida",
+    q23_solicitud_asilo_si == "Pero luego de analizar la solicitud me lo denegaron"  ~ "Denegada",
+    TRUE  ~ NA_character_
+  )) %>% 
+  filter(q22_solicitud_asilo == "Si" & !is.na(q23_solicitud_asilo_si) & !is.na(nacionalidad_agrup) & nacionalidad_agrup!="APÁTRIDA") %>%
+  group_by(nacionalidad_agrup, q23_solicitud_asilo_si) %>%
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>% 
+  group_by(nacionalidad_agrup) %>%
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%
+  select("Región de origen"=nacionalidad_agrup, q23_solicitud_asilo_si, Porcentaje) %>%
+  pivot_wider(names_from = q23_solicitud_asilo_si, values_from = Porcentaje, values_fill = 0) %>%
+  arrange("Región de origen") 
+
+
+# Imprimir la tabla
+knitr::kable(grafico_2.3.5) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 2.3.6: Migración por violencias y/o persecuciones y solicitud de asilo
+
+```{r graf_2.3.6, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q22_solicitud_asilo = na_if(q22_solicitud_asilo, ""))
+
+#Gráfico 2.3.6
+grafico_2.3.6 <- enma1 %>% 
+  # Crear variable "motivo_violencia" basada en las respuestas de violencia de género o persecución
+  mutate(motivo_violencia = case_when(
+    q14_motivos_violencia_genero == 1 | q14_motivos_persecucion == 1 ~ 1,
+    TRUE ~ 0
+  )) %>%
+  filter(!is.na(q22_solicitud_asilo) & motivo_violencia == 1) %>% #Filtra datos
+  group_by(q22_solicitud_asilo) %>% #Agrupa datos
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  # Calcular el total ponderado de cada grupo
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%# Calcular el porcentaje de cada categoría dentro del total
+  arrange(desc(Porcentaje)) %>%# Ordenar por porcentaje de manera descendente
+  rename("Estado solicitud" = q22_solicitud_asilo)# Renombrar variable
+
+# Imprimir la tabla
+knitr::kable(grafico_2.3.6) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 2.3.7: Migración por ciolencias y/o persecuciones y solicitud de asilo (en porcentaje)
+
+```{r graf_2.3.7, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q24_solicitud_asilo_no = na_if(q24_solicitud_asilo_no, ""))
+
+#Gráfico 2.3.7
+grafico_2.3.7<-enma1 %>% 
+  filter(q22_solicitud_asilo=="No" & !is.na(q24_solicitud_asilo_no)) %>% 
+  group_by(q24_solicitud_asilo_no) %>% 
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  #Calcula distribución
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% #Calcula porcentaje
+  arrange(desc(Porcentaje)) %>%  # Ordenar de mayor a menor 
+  rename("Motivos"=q24_solicitud_asilo_no)
+
+# Imprimir la tabla
+knitr::kable(grafico_2.3.7) %>%
+  kable_minimal()
+
+
+```
+
+

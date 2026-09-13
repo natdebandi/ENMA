@@ -1,0 +1,684 @@
+---
+title: "Anuario ENMA 2023 - Capítulo 1"
+output: html_document
+---
+
+# Instalación y carga de librerías necesarias
+
+```{r librerias, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Cargar librerías
+library(tidyverse)  # Manipulación y visualización de datos
+library(readxl)     # Lectura de archivos Excel
+library(janitor)    # Limpieza y estandarización de nombres de variables
+library(knitr)      # Generación de tablas en documentos dinámicos
+library(kableExtra) # Mejora en la presentación de tablas
+```
+
+
+
+## Carga de la base de datos ENMA 2023
+
+```{r carga, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Carga del archivo CSV con la base de datos de la ENMA 2023
+enma <- read.csv("data/ENMA2023_final_public.csv")
+
+# Alternativamente, para leer desde un archivo Excel descomentar la siguiente línea:
+# enma <- read_xlsx("data/ENMA2023_final_public.xlsx", sheet = 1)
+
+```
+
+## Exploración inicial de la base de datos
+
+```{r exploración,eval=FALSE, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Mostrar los nombres de las variables en la base de datos
+names(enma)
+
+# Para ver la estructura de la base de datos descomentar la siguiente línea:
+str(enma)
+
+```
+
+## Cuadro 1.2: Cantidad y peso porcentual de las principales nacionalidades
+
+```{r cuadro_1.2, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(nacionalidad_var = na_if(nacionalidad_var, ""))
+
+# Generar tabla con la cantidad y porcentaje de cada nacionalidad
+cuadro_1.2 <- enma1 %>% 
+  filter(!is.na(q3_pais_nacimiento)) %>% 
+  group_by(nacionalidad_var) %>%  # Agrupar por nacionalidad
+  summarise(Cantidad = round(sum(weightvec))) %>%  # Sumar pesos para cada nacionalidad
+  mutate(Porcentaje = round((Cantidad / sum(Cantidad)) * 100, 1)) %>%  # Calcular porcentaje
+  arrange(desc(Porcentaje)) %>%  # Ordenar de mayor a menor
+  rename("País de nacimiento" = nacionalidad_var) %>%  # Renombrar variable
+  slice(-3)  # Eliminar fila no deseada
+
+# Imprimir la tabla
+knitr::kable(cuadro_1.2) %>% 
+  kable_minimal()
+
+
+```
+
+## Cuadro 1.3: Distribución de los cuatro principales colectivos según región
+
+```{r cuadro_1.3, echo=TRUE, message=FALSE, warning=FALSE}
+
+
+# Creación de un vector con las nacionalidades seleccionadas
+nacionalidades <- c("Paraguay", "Perú", "Venezuela","Bolivia")
+
+#Cuadro 1.3
+cuadro_1.3 <- enma %>%
+  filter(q3_pais_nacimiento %in% nacionalidades & !is.na(region_amba_agrup)) %>%  # Filtra datos
+  group_by(region_amba_agrup, q3_pais_nacimiento) %>%  # Agrupa por región y nacionalidad
+  summarise(Cantidad = sum(weightvec_0, na.rm = TRUE), .groups = "drop") %>%  # Suma ponderada
+  group_by(q3_pais_nacimiento) %>%  # Agrupa solo por nacionalidad
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1))  %>%  # Calcula porcentaje dentro de cada nacionalidad
+  select(-Cantidad) %>%   # Elimina la columna de valores absolutos
+  pivot_wider(names_from = q3_pais_nacimiento, values_from = Porcentaje) %>%  # Transforma a tabla de doble entrada
+  arrange(desc(Paraguay)) %>%  # Ordena por región
+  rename("Región de residencia"=region_amba_agrup)
+
+# Imprimir tabla
+knitr::kable(cuadro_1.3) %>%
+  kable_minimal()
+
+
+```
+
+
+## Gráfico 1.2. Distribución de la población migrante según grupos de edad y regiones de residencia (en porcentaje)
+
+```{r graf_1.2, echo=TRUE, message=FALSE, warning=FALSE}
+
+#Gráfico 1.2
+grafico_1.2<- enma %>%
+  filter(!is.na(edad_agrup) & !is.na(region_amba_agrup)) %>%  # Filtra datos
+  group_by(region_amba_agrup, edad_agrup) %>%  # Agrupa por región y nacionalidad
+  summarise(Cantidad = sum(weightvec, na.rm = TRUE), .groups = "drop") %>%  # Suma ponderada
+  group_by(region_amba_agrup) %>%  # Agrupa solo por nacionalidad
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1))  %>%  # Calcula porcentaje dentro de cada nacionalidad
+  select(-Cantidad) %>%   # Elimina la columna de valores absolutos
+  pivot_wider(names_from = edad_agrup, values_from = Porcentaje) %>%  # Transforma a tabla de doble entrada
+  rename("Región de residencia"=region_amba_agrup)
+
+# Imprimir la tabla
+knitr::kable(grafico_1.2) %>% 
+  kable_minimal()
+
+```
+
+## Gráfico 1.3. Distribución de la población migrante según grupos de edad y regiones de origen (en porcentaje)
+
+```{r graf_1.3, echo=TRUE, message=FALSE, warning=FALSE}
+
+#Gráfico 1.3
+grafico_1.3<- enma %>%
+  filter(!is.na(edad_agrup) & !is.na(nacionalidad_agrup) & nacionalidad_agrup!="APÁTRIDA") %>%  # Filtra datos
+  group_by(nacionalidad_agrup, edad_agrup) %>%  # Agrupa por región y nacionalidad
+  summarise(Cantidad = sum(weightvec_0, na.rm = TRUE), .groups = "drop") %>%  # Suma ponderada
+  group_by(nacionalidad_agrup) %>%  # Agrupa solo por nacionalidad
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1))  %>%  # Calcula porcentaje dentro de cada nacionalidad
+  select(-Cantidad) %>%   # Elimina la columna de valores absolutos
+  pivot_wider(names_from = edad_agrup, values_from = Porcentaje) %>%  # Transforma a tabla de doble entrada
+  rename("Región de origen"=nacionalidad_agrup)
+
+
+# Imprimir la tabla
+knitr::kable(grafico_1.3) %>% 
+  kable_minimal()
+
+
+```
+
+## Cuadro 1.4. Cantidad y proporción de migrantes según género no binario
+```{r cuadro_1.4, echo=TRUE, message=FALSE, warning=FALSE}
+# Definir categorías a agrupar
+categorias_otros <- c("No binario", "Mujer trans", "Otro", "Varón trans", "Intersex", "Prefiero no responder")
+
+# Crear la tabla con categorías agrupadas
+cuadro_1.4 <- enma %>% 
+  mutate(Género = ifelse(q4_genero %in% categorias_otros, "Otros", q4_genero)) %>%  # Agrupa categorías
+  group_by(Género) %>%  
+  summarise(Cantidad = round(sum(weightvec)), .groups = 'drop') %>%  
+  mutate(Porcentaje = round((Cantidad / sum(Cantidad)) * 100, 1)) %>%  
+  arrange(factor(Género, levels = c("Mujer", "Varón", "Otros")))  # Orden de categorías
+
+# Crear la tabla con los N desagregados de las categorías agrupadas
+detalle_otros <- enma %>% 
+  filter(q4_genero %in% categorias_otros) %>%  
+  group_by(q4_genero) %>%  
+  summarise(Cantidad = round(sum(weightvec)), .groups = 'drop') %>%  
+  rename("Detalle de 'Otros'" = q4_genero)  
+
+# Imprimir las tablas
+knitr::kable(cuadro_1.4) %>% 
+  kable_minimal()
+
+knitr::kable(detalle_otros, caption = "Detalle de la categoría 'Otros'") %>% 
+  kable_minimal()
+
+
+
+```
+
+## Gráfico 1.4. Distribución de la población migrante según país de origen y género binario (en porcentaje)
+```{r graf_1.4, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Creación de un vector con las nacionalidades seleccionadas
+nacionalidades <- c("Ecuador", "Italia", "República Dominicana", "Brasil", "Paraguay", 
+                    "Chile", "España", "Perú", "Venezuela", "Uruguay", "Bolivia", 
+                    "Colombia", "Haití", "Senegal")
+
+#Gráfico 1.4
+grafico_1.4<- enma %>%
+  filter(genero_agrup %in% c("Mujer", "Varón") & q3_pais_nacimiento %in% nacionalidades) %>%  # Filtra datos
+  group_by(q3_pais_nacimiento, genero_agrup) %>%  # Agrupa por género y nacionalidad
+  summarise(Cantidad = sum(weightvec_0, na.rm = TRUE), .groups = "drop") %>%  # Suma ponderada
+  group_by(q3_pais_nacimiento) %>%  # Agrupa solo por nacionalidad
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1))  %>%  # Calcula porcentaje dentro de cada nacionalidad
+  select(-Cantidad) %>%   # Elimina la columna de valores absolutos
+  pivot_wider(names_from = genero_agrup, values_from = Porcentaje) %>%  # Transforma a tabla de doble entrada
+  rename("Nacionalidad"=q3_pais_nacimiento)
+
+
+# Imprimir la tabla
+knitr::kable(grafico_1.4) %>% 
+  kable_minimal()
+
+```
+
+
+## Gráfico 1.5: Proporción de personas migrantes afrodescendientes o pertenecientes a pueblos indígenas según región de residencia
+```{r graf_1.5, echo=T, message=F, warning=F}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q5_descendencia = na_if(q5_descendencia, ""))
+
+# Gráfico 1.5
+grafico_1.5 <- enma1 %>%
+  filter(!is.na(q5_descendencia)) %>%  # Selecciona solo aquellos que respondieron a la pregunta q5
+  group_by(region_amba_agrup) %>% # Agrupa la información según la región
+  summarise(
+    Total = round(sum(weightvec), 0), # Calcula total de respuestas válidas
+    ind = sum(weightvec[q5_descendencia_indigena == 1]), # Calcula total de respuestas que indican tener descendencia indígena
+    afro = sum(weightvec[q5_descendencia_afro == 1]), # Calcula total de respuestas que indican tener descendencia afro
+    'Indígena' = round(ind / Total * 100, 1), # Calcula porcentaje con descendencia indígena
+    'Afrodescendiente' = round(afro / Total * 100, 1) # Calcula porcentaje con descendencia afro
+  ) %>%
+  select(1, 5:6) %>%   # Selecciona columnas con porcentaje
+  rename("Región de residencia"=1, "Indígena o descendiente de pueblos indígenas u originarios"=2, "Afrodescendiente, africano o afroargentino/a"=3)
+
+# Imprimir la tabla
+knitr::kable(grafico_1.5) %>%
+  kable_minimal()
+
+
+```
+
+## Gráfico 1.6: Distribución de la población migrante según máximo nivel educativo alcanzado
+```{r graf_1.6, echo=T, message=F, warning=F}
+
+# Convertir campos vacíos de la variable niveled_agrup en NA
+enma1 <- enma %>%
+  mutate(niveled_agrup = na_if(niveled_agrup, ""))
+
+# Genera el gráfico 1.6
+grafico_1.6 <- enma1 %>%
+  filter(!is.na(niveled_agrup)) %>%  # Filtra datos con niveles educativos válidos
+  group_by(niveled_agrup) %>%  # Agrupa la información según máximo nivel educativo alcanzado
+  summarise(
+    Cantidad = round(sum(weightvec))  # Calcula el total ponderado para cada nivel educativo
+  ) %>%
+  mutate(
+    Porcentaje = round((Cantidad / sum(Cantidad)) * 100, 1)  # Calcula el porcentaje de cada nivel educativo
+  ) %>%
+  arrange(desc(Porcentaje)) %>%  # Ordena de mayor a menor porcentaje
+  rename("Máximo nivel educativo" = niveled_agrup)  # Renombra la variable
+
+# Imprimir la tabla
+knitr::kable(grafico_1.6) %>%
+  kable_minimal()
+```
+
+## Gráfico 1.7: Distribución de la población migrante según nivel educativo y tiempo de residencia (en porcentaje)
+
+```{r graf_1.7, echo=T, message=F, warning=F}
+
+#REVISAR!!
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(tiempo_residencia_agrup= na_if(tiempo_residencia_agrup, "")) %>% 
+  mutate(q46_estudios = na_if(q46_estudios, ""))
+
+#Gráfico 1.7
+grafico_1.7 <- enma1 %>% 
+  # Recategorizar el nivel educativo en tres grandes grupos
+  mutate(q46_estudios = case_when(
+    q46_estudios %in% c("Primario incompleto o en curso", "Primario completo", "Secundario incompleto o en curso") ~ "Hasta secundario incompleto",
+    q46_estudios =="Secundario completo"~ "Secundario completo",
+    q46_estudios %in% c("Terciario incompleto o en curso", "Terciario completo", 
+                        "Universitario incompleto o en curso", "Universitario completo") ~ 
+                        "Superior o universitario completo o incompleto",
+    TRUE ~ NA_character_)   # Asigna NA a valores faltantes o no categorizados
+  ) %>% 
+  filter(!is.na(q46_estudios) & !is.na(tiempo_residencia_agrup)) %>% # Filtrar datos
+  group_by(q46_estudios, tiempo_residencia_agrup) %>%  # Agrupar por nivel educativo y tiempo de residencia
+  summarise(Cantidad = sum(weightvec, na.rm = TRUE), .groups = "drop") %>%  # Calcular la suma ponderada de casos en cada grupo
+  group_by(tiempo_residencia_agrup) %>%    # Agrupar nuevamente por tiempo de residencia para calcular porcentajes
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%  # Calcular el porcentaje de cada nivel educativo 
+  select(-Cantidad) %>%   # Eliminar la columna de valores absolutos  
+  pivot_wider(names_from = q46_estudios, values_from = Porcentaje, values_fill = list(Porcentaje = 0)) %>%  # Transformar a formato ancho
+  rename("Tiempo de residencia" = tiempo_residencia_agrup)  # Renombrar variable
+
+
+
+
+# Imprimir la tabla
+knitr::kable(grafico_1.7) %>% 
+  kable_minimal() 
+
+```
+ 
+## Gráfico 1.8:Estructura de las familias migrantes (situación de pareja y tenencia de hijos/as) según género (en porcentaje)
+
+```{r graf_1.8, echo=T, message=F, warning=F}
+
+# Eliminar NA en las variables relevantes
+enma1 <- enma %>%
+  mutate(q28_hogar_convivencia = na_if(q28_hogar_convivencia, ""),
+         q29_hijos_num = na_if(q29_hijos_num, ""),
+         genero_agrup = na_if(genero_agrup, "")) %>%
+  filter(!is.na(q28_hogar_convivencia) & !is.na(q29_hijos_num) & !is.na(genero_agrup))
+
+# Construcción de la variable sobre estructura familiar
+enma1 <- enma1 %>%
+  mutate(Hogar = case_when(
+    q28_hogar_convivencia == "No tengo cónyuge o pareja" & q29_hijos_num == "No" ~ "Sin cónyuge o pareja ni hijos",
+    q28_hogar_convivencia == "No tengo cónyuge o pareja" & q29_hijos_num == "Si" ~ "Sin cónyuge o pareja y con hijos",
+    q28_hogar_convivencia %in% c("Sí, con una persona nacida en Argentina", "Sí, con una persona nacida en otro país (migrante o extranjero/a)") & 
+      q29_hijos_num == "No" ~ "Con cónyuge o pareja y sin hijos",
+    q28_hogar_convivencia %in% c("Sí, con una persona nacida en Argentina", "Sí, con una persona nacida en otro país (migrante o extranjero/a)") & 
+      q29_hijos_num == "Si" ~ "Con cónyuge o pareja y con hijos",
+    TRUE ~ NA_character_
+  )) %>%
+  filter(!is.na(Hogar) & genero_agrup %in% c("Mujer", "Varón")) %>%
+  rename(Género = genero_agrup)
+
+# Calcular frecuencias absolutas y porcentajes por género
+grafico_1.8 <- enma1 %>%
+  group_by(Hogar, Género) %>%
+  summarise(Cantidad = sum(weightvec, na.rm = TRUE), .groups = 'drop') %>%
+  group_by(Género) %>%
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%
+  select(Hogar, Género, Porcentaje) %>%
+  pivot_wider(names_from = Género, values_from = Porcentaje, values_fill = list(Porcentaje = 0))  # Rellenar valores faltantes con 0
+
+
+# Imprimir la tabla
+knitr::kable(grafico_1.8) %>%
+  kable_minimal()
+
+
+```
+
+## Cuadro 1.5. Indicadores de estructura familiar de las personas migrantes
+
+```{r cuadro_1.5, echo=T, message=F, warning=F}
+
+# Asegurar que las variables tengan valores NA correctos según su tipo de dato
+enma1 <- enma %>%
+  mutate(
+    q26_hogar_personas = replace(q26_hogar_personas, q26_hogar_personas == "", NA), 
+    q30_hijos_arg = replace(q30_hijos_arg, q30_hijos_arg == "", NA),
+    q30_hijos_exterior = replace(q30_hijos_exterior, q30_hijos_exterior == "", NA),
+    q29_hijos_num = na_if(q29_hijos_num, ""),  
+    q31_hijos_menores_exterior = na_if(q31_hijos_menores_exterior, "") 
+  )
+
+# Cálculo de indicadores de estructura familiar
+cuadro_1.5 <- enma1 %>%
+    mutate(
+    q26_hogar_personas = replace(q26_hogar_personas, q26_hogar_personas == "", NA), 
+    q30_hijos_arg = replace(q30_hijos_arg, q30_hijos_arg == "", NA),
+    q30_hijos_exterior = replace(q30_hijos_exterior, q30_hijos_exterior == "", NA),
+    q29_hijos_num = na_if(q29_hijos_num, ""),  
+    q31_hijos_menores_exterior = na_if(q31_hijos_menores_exterior, "") 
+  ) %>% 
+  summarise(
+    'Promedio de personas en el hogar' = as.integer(round(mean(q26_hogar_personas, na.rm = TRUE), 0)),
+    'Promedio de hijos/as nacidos/as en la Argentina' = as.integer(round(mean(q30_hijos_arg, na.rm = TRUE), 0)),
+    'Promedio de hijos/as nacidos/as en el extranjero' = as.integer(round(mean(q30_hijos_exterior, na.rm = TRUE), 0)),
+    hogar_con_hijes = sum((q29_hijos_num == "Si") * weightvec, na.rm = TRUE),
+    hogar_con_hijes_mig = sum((q30_hijos_exterior > 0) * weightvec, na.rm = TRUE),
+    hogar_menores_ext = sum((q31_hijos_menores_exterior == "Si") * weightvec, na.rm = TRUE),
+    total = sum(weightvec, na.rm = TRUE)
+  ) %>%
+  mutate(
+    'Proporción de hogares con hijos/as' = round(hogar_con_hijes / total * 100, 1),
+    'Proporción de hogares con hijos/as nacidos en el extranjero' = ifelse(hogar_con_hijes > 0, 
+                                                                           round(hogar_con_hijes_mig / hogar_con_hijes * 100, 1), NA),
+    'Proporción de hogares con hijos menores de 18 años que viven en el extranjero' = ifelse(hogar_con_hijes > 0, 
+                                                                                             round(hogar_menores_ext / hogar_con_hijes * 100, 1), NA)
+  ) %>%
+  select(1:3, 8:10)   # Seleccionar solo variables de interés
+
+# Convertir a formato largo y asegurar que los promedios sean enteros en la tabla
+cuadro_1.5 <- pivot_longer(cuadro_1.5, 
+                           cols = everything(),
+                           names_to = "Indicador", 
+                           values_to = "Valor") %>%
+  mutate(Valor = ifelse(Indicador %in% c("Promedio de personas en el hogar", 
+                                         "Promedio de hijos/as nacidos/as en la Argentina", 
+                                         "Promedio de hijos/as nacidos/as en el extranjero"), 
+                        format(as.integer(Valor), nsmall = 0),  # Forzar formato entero sin decimales
+                        format(Valor, nsmall = 1)))  # Mantener decimales en proporciones
+
+# Imprimir la tabla
+knitr::kable(cuadro_1.5) %>%
+  kable_minimal()
+
+                                                                                             
+```
+
+## Gráfico 1.9. Indicadores de tenencia de hijos/as en contexto de la migración según región de residencia del padre/madre (en porcentaje)
+
+```{r graf_1.9, echo=T, message=F, warning=F}
+
+#Gráfico 1.9
+grafico_1.9 <- enma %>% 
+  filter(!is.na(region_amba_agrup)) %>% 
+  group_by(region_amba_agrup) %>%  
+  summarise(
+    hogar_con_hijes = sum((q29_hijos_num == "Si") * weightvec, na.rm = TRUE),
+    hogar_con_hijes_mig = sum((q30_hijos_exterior > 0) * weightvec, na.rm = TRUE),
+    hogar_menores_ext = sum((q31_hijos_menores_exterior == "Si") * weightvec, na.rm = TRUE),
+    total = sum(weightvec, na.rm = TRUE)
+  ) %>% 
+  mutate(
+    'Proporción de hogares con hijos/as nacidos en el extranjero' = ifelse(hogar_con_hijes > 0, round(hogar_con_hijes_mig / hogar_con_hijes * 100, 1), NA),
+    'Proporción de hogares con hijos menores de 18 años que viven en el extranjero' = ifelse(hogar_con_hijes > 0, round(hogar_menores_ext / hogar_con_hijes * 100, 1), NA)
+  ) %>% 
+  select("Región" = region_amba_agrup,  `Proporción de hogares con hijos/as nacidos en el extranjero`, `Proporción de hogares con hijos menores de 18 años que viven en el extranjero`)
+
+# Imprimir la tabla
+knitr::kable(grafico_1.9) %>% 
+  kable_minimal()
+ 
+
+
+```
+
+## Cuadro 1.6. Indicadores relativos a tenencia de hijos/as en contexto migratorio según país de origen del padre/madre/tutor**
+```{r cuadro_1.6, echo=T, message=F, warning=F}
+
+# Creación de un vector con las nacionalidades seleccionadas
+nacionalidades <- c("Italia", "Brasil", "Paraguay", "Chile", "España", "Perú", "Venezuela", "Uruguay", "Bolivia", "Colombia")
+
+
+# Cuadro 1.6
+cuadro_1.6 <- enma %>% 
+  filter(q3_pais_nacimiento %in% nacionalidades) %>%  # Filtra por nacionalidades seleccionadas
+  group_by(q3_pais_nacimiento) %>% 
+  summarise(
+    'Promedio personas hogar' = round(mean(q26_hogar_personas, na.rm = TRUE), 0),
+    'Promedio de hijos/as nacidos/as en la Argentina' = round(mean(q30_hijos_arg, na.rm = TRUE), 0),
+    'Promedio de hijos/as nacidos/as en el extranjero' = round(mean(q30_hijos_exterior, na.rm = TRUE), 0),
+    hogar_con_hijes = sum((q29_hijos_num == "Si") * weightvec, na.rm = TRUE),
+    hogar_con_hijes_mig = sum((q30_hijos_exterior > 0) * weightvec, na.rm = TRUE),
+    hogar_menores_ext = sum((q31_hijos_menores_exterior == "Si") * weightvec, na.rm = TRUE),
+    total = sum(weightvec, na.rm = TRUE)
+  ) %>% 
+  mutate(
+    'Proporción de hogares con hijos/as nacidos en el extranjero' = ifelse(hogar_con_hijes > 0, round(hogar_con_hijes_mig / hogar_con_hijes * 100, 1), NA),
+    'Proporción de hogares con hijos menores de 18 años que viven en el extranjero' = ifelse(hogar_con_hijes > 0, round(hogar_menores_ext / hogar_con_hijes * 100, 1), NA)
+  ) %>% 
+  arrange(desc(`Promedio personas hogar`)) %>%  # Ordena por promedio de personas en el hogar
+  select(
+    "País de nacimiento migrante (padre/madre/tutor)" = q3_pais_nacimiento,
+    "Promedio personas hogar",
+    "Promedio de hijos/as nacidos/as en la Argentina",
+    "Promedio de hijos/as nacidos/as en el extranjero",
+    "Proporción de hogares con hijos/as nacidos en el extranjero",
+    "Proporción de hogares con hijos menores de 18 años que viven en el extranjero"
+  ) 
+
+# Imprimir la tabla
+knitr::kable(cuadro_1.6) %>% 
+  kable_minimal()
+
+```
+
+## Gráfico 1.10. Distribución de las modalidades de ingreso al país de la población migrante según región de origen (en porcentaje)
+```{r graf_1.10, echo=T, message=F, warning=F}
+
+# Convertir campos vacíos  en NA
+enma1 <- enma %>%
+  mutate(q12_modo_ingreso = na_if(q12_modo_ingreso, ""))
+
+# Gráfico 1.10
+grafico_1.10 <- enma1 %>%
+  filter(!is.na(nacionalidad_agrup) & nacionalidad_agrup!="APÁTRIDA" & !is.na(q12_modo_ingreso) & q12_modo_ingreso!="Otro") %>% # Filtrar datos
+  group_by(q12_modo_ingreso, nacionalidad_agrup) %>%  # Agrupar por nivel educativo y tiempo de residencia
+  summarise(Cantidad = sum(weightvec, na.rm = TRUE), .groups = "drop") %>%  # Calcular la suma ponderada de casos en cada grupo
+  group_by(nacionalidad_agrup) %>%    # Agrupar nuevamente por tiempo de residencia para calcular porcentajes
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%  # Calcular el porcentaje de cada nivel educativo 
+  select(-Cantidad) %>%   # Eliminar la columna de valores absolutos  
+  pivot_wider(names_from = q12_modo_ingreso, values_from = Porcentaje, values_fill = list(Porcentaje = 0)) %>%  # Transformar a formato ancho
+  rename("Región de origen" = nacionalidad_agrup)  # Renombrar variable
+
+
+# Imprimir la tabla
+knitr::kable(grafico_1.10) %>% 
+  kable_minimal()
+
+```
+
+
+## Gráfico 1.11. Proporción de personas migrantes según región de origen que vivió más tres meses en una jurisdicción provincial distinta a la de su residencia actual
+```{r graf_1.11, echo=T, message=F, warning=F}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q11_otra_provincia = na_if(q11_otra_provincia, ""))
+
+# Gráfico 1.11
+grafico_1.11 <- enma1 %>%
+  filter(!is.na(nacionalidad_agrup) & nacionalidad_agrup!="APÁTRIDA" & !is.na(q11_otra_provincia)) %>% # Filtrar datos
+  group_by(q11_otra_provincia, nacionalidad_agrup) %>%  # Agrupar por nivel educativo y tiempo de residencia
+  summarise(Cantidad = sum(weightvec, na.rm = TRUE), .groups = "drop") %>%  # Calcular la suma ponderada de casos en cada grupo
+  group_by(nacionalidad_agrup) %>%    # Agrupar nuevamente por tiempo de residencia para calcular porcentajes
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%    # Calcular el porcentaje de cada nivel educativo 
+  filter(q11_otra_provincia=="Si") %>% 
+  select(-1,"Región de origen"=2, -Cantidad)   # Eliminar y renombrar variables
+
+# Imprimir la tabla
+knitr::kable(grafico_1.11) %>%
+  kable_minimal()
+
+
+
+```
+
+
+## Gráfico 1.12. Principales motivos para emprender la migración de las personas migrantes según género (en porcentaje). Selección múltiple
+```{r graf_1.12, echo=T, message=F, warning=F}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q14_motivos = na_if(q14_motivos, ""))
+
+# Gráfico 1.12
+grafico_1.12 <- enma1 %>%
+  mutate(
+    motivo_trabajo = as.integer(q14_motivos_mejor_trabajo == 1),
+    motivo_necbas = as.integer(q14_motivos_necesidades_basicas == 1),
+    motivo_est_exp = as.integer(q14_motivos_estudio == 1 | q14_motivos_nuevas_experiencias == 1),
+    motivo_violencia = as.integer(q14_motivos_violencia_genero == 1 | q14_motivos_orientacion_sexual == 1 | q14_motivos_persecucion == 1),
+    motivo_otros = as.integer(q14_motivos_salud == 1 | q14_motivos_habitat == 1 | q14_motivos_otros == 1),
+    motivo_familiares = as.integer(q14_motivos_acompañar_otrx == 1 | q14_motivos_reunificacion == 1)
+  ) %>%
+  filter(!is.na(q14_motivos), genero_agrup %in% c("Mujer", "Varón")) %>%
+  group_by(genero_agrup) %>%
+  summarise(
+    motivos_tt = sum(weightvec, na.rm = TRUE),
+    mejor_trabajo = sum(weightvec * motivo_trabajo, na.rm = TRUE),
+    nec_basicas = sum(weightvec * motivo_necbas, na.rm = TRUE),
+    estudio_exp = sum(weightvec * motivo_est_exp, na.rm = TRUE),
+    violencia = sum(weightvec * motivo_violencia, na.rm = TRUE),
+    familiar = sum(weightvec * motivo_familiares, na.rm = TRUE),
+    otros = sum(weightvec * motivo_otros, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    `Mejor trabajo` = round(ifelse(motivos_tt > 0, (mejor_trabajo / motivos_tt) * 100, 1), 1),
+    `Necesidades básicas` = round(ifelse(motivos_tt > 0, (nec_basicas / motivos_tt) * 100, 1), 1),
+    `Estudios y nuevas experiencias` = round(ifelse(motivos_tt > 0, (estudio_exp / motivos_tt) * 100, 1), 1),
+    `Violencias y persecuciones` = round(ifelse(motivos_tt > 0, (violencia / motivos_tt) * 100, 1), 1),
+    `Motivos familiares` = round(ifelse(motivos_tt > 0, (familiar / motivos_tt) * 100, 1), 1),
+    `Otros` = round(ifelse(motivos_tt > 0, (otros / motivos_tt) * 100, 1), 1)
+  ) %>%
+  select(genero_agrup, `Mejor trabajo`, `Necesidades básicas`, `Estudios y nuevas experiencias`, `Violencias y persecuciones`, `Motivos familiares`, `Otros`) %>%
+  pivot_longer(cols = -genero_agrup, names_to = "Motivo", values_to = "Porcentaje") %>%
+  pivot_wider(names_from = genero_agrup, values_from = Porcentaje) %>%
+  arrange(desc(ifelse(Motivo != "Otros", Varón, -Inf)))  # Ordena por varón, dejando "Otros" al final
+
+# Imprimir la tabla
+knitr::kable(grafico_1.12) %>%
+  kable_minimal()
+
+```
+
+
+## Gráfico 1.13. Principales motivos para emprender la migración de las personas migrantes según región de origen (en porcentaje)
+```{r graf_1.13, echo=T, message=F, warning=F}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q14_motivos = na_if(q14_motivos, ""))
+
+# Gráfico 1.13
+grafico_1.13 <- enma1 %>%
+  mutate(
+    motivo_trabajo = as.integer(q14_motivos_mejor_trabajo == 1),
+    motivo_necbas = as.integer(q14_motivos_necesidades_basicas == 1),
+    motivo_est_exp = as.integer(q14_motivos_estudio == 1 | q14_motivos_nuevas_experiencias == 1),
+    motivo_violencia = as.integer(q14_motivos_violencia_genero == 1 | q14_motivos_orientacion_sexual == 1 | q14_motivos_persecucion == 1),
+    motivo_otros = as.integer(q14_motivos_salud == 1 | q14_motivos_habitat == 1 | q14_motivos_otros == 1),
+    motivo_familiares = as.integer(q14_motivos_acompañar_otrx == 1 | q14_motivos_reunificacion == 1)
+  ) %>%
+  filter(!is.na(q14_motivos)) %>%
+  group_by(nacionalidad_agrup) %>%
+  summarise(
+    motivos_tt = sum(weightvec, na.rm = TRUE),
+    mejor_trabajo = sum(weightvec * motivo_trabajo, na.rm = TRUE),
+    nec_basicas = sum(weightvec * motivo_necbas, na.rm = TRUE),
+    estudio_exp = sum(weightvec * motivo_est_exp, na.rm = TRUE),
+    violencia = sum(weightvec * motivo_violencia, na.rm = TRUE),
+    familiar = sum(weightvec * motivo_familiares, na.rm = TRUE),
+    otros = sum(weightvec * motivo_otros, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    `Mejor trabajo` = round(ifelse(motivos_tt > 0, (mejor_trabajo / motivos_tt) * 100, 1), 1),
+    `Necesidades básicas` = round(ifelse(motivos_tt > 0, (nec_basicas / motivos_tt) * 100, 1), 1),
+    `Estudios y nuevas experiencias` = round(ifelse(motivos_tt > 0, (estudio_exp / motivos_tt) * 100, 1), 1),
+    `Violencias y persecuciones` = round(ifelse(motivos_tt > 0, (violencia / motivos_tt) * 100, 1), 1),
+    `Motivos familiares` = round(ifelse(motivos_tt > 0, (familiar / motivos_tt) * 100, 1), 1),
+    `Otros` = round(ifelse(motivos_tt > 0, (otros / motivos_tt) * 100, 1), 1)
+  ) %>%
+  select(nacionalidad_agrup, `Mejor trabajo`, `Necesidades básicas`, `Estudios y nuevas experiencias`, `Violencias y persecuciones`, `Motivos familiares`, `Otros`) %>%
+  slice(-1) %>%  # Elimina la primera fila según el código original
+  pivot_longer(cols = -nacionalidad_agrup, names_to = "Motivo", values_to = "Porcentaje") %>%
+  pivot_wider(names_from = nacionalidad_agrup, values_from = Porcentaje)
+
+
+
+# Imprimir la tabla
+knitr::kable(grafico_1.13) %>%
+  kable_minimal()
+```
+
+## Gráfico 1.14. Proporción de personas migrantes de las principales nacionalidades cuyos motivos para emprender la migración fueron estudio o nuevas experiencias y trabajo
+
+```{r graf_1.14, echo=T, message=F, warning=F}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q14_motivos = na_if(q14_motivos, ""))
+
+# Definir las nacionalidades seleccionadas
+nacionalidades <- c("Italia", "Brasil", "Paraguay", "Chile", "España", "Perú", "Venezuela", "Uruguay", "Bolivia", "Colombia", "Haití")
+
+# Generar gráfico 1.14
+grafico_1.14 <- enma1 %>%
+  mutate(
+    motivo_trabajo = as.integer(q14_motivos_mejor_trabajo == 1),
+    motivo_necbas = as.integer(q14_motivos_necesidades_basicas == 1),
+    motivo_est_exp = as.integer(q14_motivos_estudio == 1 | q14_motivos_nuevas_experiencias == 1),
+    motivo_violencia = as.integer(q14_motivos_violencia_genero == 1 | q14_motivos_orientacion_sexual == 1 | q14_motivos_persecucion == 1),
+    motivo_otros = as.integer(q14_motivos_salud == 1 | q14_motivos_habitat == 1 | q14_motivos_otros == 1),
+    motivo_familiares = as.integer(q14_motivos_acompañar_otrx == 1 | q14_motivos_reunificacion == 1)
+  ) %>%
+  filter(!is.na(q14_motivos) & q3_pais_nacimiento %in% nacionalidades) %>%  # Filtrar por motivos y nacionalidades seleccionadas
+  group_by(q3_pais_nacimiento) %>% 
+  summarise(
+    motivos_tt = sum(weightvec, na.rm = TRUE),  # Total de respuestas ponderadas
+    mejor_trabajo = sum(weightvec * motivo_trabajo, na.rm = TRUE),  # Respuestas "Mejor trabajo"
+    estudio_exp = sum(weightvec * motivo_est_exp, na.rm = TRUE),  # Respuestas "Estudios y nuevas experiencias"
+    'Mejor trabajo' = round((mejor_trabajo / motivos_tt) * 100, 1),  # Porcentaje de "Mejor trabajo"
+    'Estudios y nuevas experiencias' = round((estudio_exp / motivos_tt) * 100, 1)  # Porcentaje de "Estudios y nuevas experiencias"
+  ) %>%
+  select("País de nacimiento" = q3_pais_nacimiento, 'Mejor trabajo', 'Estudios y nuevas experiencias')
+
+# Imprimir la tabla
+knitr::kable(grafico_1.14) %>%
+  kable_minimal() 
+
+```
+
+
+## Gráfico 1.15. Distribución de la población migrante según sus proyectos migratorios para los próximos dos años (en porcentaje)
+
+```{r graf_1.15, echo=T, message=F, warning=F}
+
+# Convertir campos vacíos de la variable q16 en NA
+enma <- enma %>%
+  mutate(q16_mudanza_lugar = na_if(q16_mudanza_lugar, ""))
+
+# Generar el gráfico 1.15
+grafico_1.15 <- enma %>%
+  # Construye la variable "proyecto" a partir de q15 y q16
+  mutate(proyecto = case_when(
+    q15_mudanza == "No" | 
+      (q15_mudanza == "Si" & q16_mudanza_lugar == "A otra provincia en Argentina") | 
+      (q15_mudanza == "Si" & q16_mudanza_lugar == "A otra ciudad de la Provincia donde vivo") ~ "Quiere permanecer en Argentina",
+    q15_mudanza == "Si" & q16_mudanza_lugar == "A otro país que no es mi país de origen" ~ "Quiere migrar a otro país",
+    q15_mudanza == "Si" & q16_mudanza_lugar == "A mi país de origen" ~ "Quiere retornar a su país de origen",
+    q15_mudanza == "No sé" | 
+      (q15_mudanza == "Si" & q16_mudanza_lugar == "Prefiero no responder") ~ "No sabe",
+    TRUE ~ NA_character_)) %>%
+  filter(!is.na(proyecto)) %>%  # Selecciona respuestas válidas
+  group_by(proyecto) %>%  # Agrupa según proyecto migratorio
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE)), .groups = "drop") %>%  # Calcula el total para cada tipo de proyecto migratorio
+  mutate(Porcentaje = round((Cantidad / sum(Cantidad)) * 100, 1)) %>%  # Calcula el porcentaje para cada tipo de proyecto migratorio
+  arrange(desc(Porcentaje)) %>%  # Ordena de mayor a menor la información
+  rename("Proyecto migratorio" = proyecto)  # Renombra la variable proyecto
+
+# Imprimir la tabla
+knitr::kable(grafico_1.15) %>% 
+  kable_minimal()
+
+
+```
+
+

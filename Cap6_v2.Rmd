@@ -1,0 +1,390 @@
+---
+title: "Anuario ENMA 2023 - Capítulo 6"
+output: html_document
+---
+
+## Instalación y carga de librerías necesarias
+
+```{r librerias, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Cargar librerías
+library(tidyverse)  # Manipulación y visualización de datos
+library(readxl)     # Lectura de archivos Excel
+library(janitor)    # Limpieza y estandarización de nombres de variables
+library(knitr)      # Generación de tablas en documentos dinámicos
+library(kableExtra) # Mejora en la presentación de tablas
+```
+
+
+## Carga de la base de datos ENMA 2023
+
+```{r carga, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Carga del archivo CSV con la base de datos de la ENMA 2023
+enma <- read.csv("data/ENMA2023_final_public.csv")
+
+# Alternativamente, para leer desde un archivo Excel descomentar la siguiente línea:
+# enma <- read_xlsx("data/ENMA2023_final_public.xlsx", sheet = 1)
+
+
+```
+
+## Exploración inicial de la base de datos
+
+```{r exploración, eval=FALSE, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Mostrar los nombres de las variables en la base de datos
+names(enma)
+
+# Para ver la estructura de la base de datos descomentar la siguiente línea:
+str(enma)
+
+```
+
+## Gráfico 6.1: Características del lugar de vivienda de la población migrante (en porcentaje)
+
+```{r graf_6.1, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q41_vivienda_lugar = na_if(q41_vivienda_lugar, ""))
+
+# Gráfico 6.1
+grafico_6.1 <- enma1 %>%
+  filter(!is.na(q41_vivienda_lugar) & q41_vivienda_lugar!="Prefiero no responder") %>%  #Filtra datos
+  group_by(q41_vivienda_lugar) %>%   # Agrupar por lugar de la vivienda
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  #Calcula distribución
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% #Calcula porcentaje
+  arrange(desc(Porcentaje)) %>%  # Ordenar de mayor a menor 
+  rename("Lugar vivienda"=q41_vivienda_lugar) #Renombra variable
+
+# Imprimir la tabla
+knitr::kable(grafico_6.1) %>%
+  kable_minimal()
+
+
+
+```
+
+
+## Gráfico 6.2: Distribución de las personas migrantes que viven en barrio popular, villa o asentamiento según país de origen (en porcentaje)
+```{r graf_6.2, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Creación de un vector con las nacionalidades seleccionadas
+nacionalidades <- c("Brasil", "Paraguay", "Chile", "Perú", "Venezuela", "Uruguay", "Bolivia", 
+                    "Colombia", "España")
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q41_vivienda_lugar = na_if(q41_vivienda_lugar, ""))
+
+# Gráfico 6.2
+grafico_6.2 <- enma1 %>%
+  filter(!is.na(q41_vivienda_lugar) & 
+         q41_vivienda_lugar != "Prefiero no responder" & q41_vivienda_lugar != "No sé" & 
+         q3_pais_nacimiento %in% nacionalidades) %>%  #Filtra datos
+  group_by(q3_pais_nacimiento) %>%  #Agrupa por nacionalidad
+  mutate(Total_Nacionalidad = sum(weightvec, na.rm = TRUE)) %>%  # Total dentro de cada nacionalidad
+  filter(q41_vivienda_lugar == "Un barrio popular, villa o asentamiento") %>%  # Filtrar solo Barrio Popular
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0),
+            Total_Nacionalidad = unique(Total_Nacionalidad), 
+            .groups = "drop") %>%
+  mutate(Porcentaje = round(Cantidad / Total_Nacionalidad * 100, 1)) %>%  # Cálculo del porcentaje
+  select(q3_pais_nacimiento, Porcentaje) %>%  # Mantener solo columnas necesarias
+  rename(Nacionalidad = q3_pais_nacimiento) %>%  # Renombra variable
+  arrange(desc(Porcentaje))
+
+# Imprimir la tabla
+knitr::kable(grafico_6.2) %>%
+  kable_minimal()
+
+
+
+```
+
+## Gráfico 6.3: Distribución del tipo de vivienda en la que habita la población total (Censo 2022) y la población migrante (ENMA 2023), en porcentaje
+
+```{r graf_6.3, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q42_vivienda_tipo = na_if(q42_vivienda_tipo, ""))
+
+# Gráfico 6.3
+grafico_6.3 <- enma1 %>%
+  filter(!is.na(q42_vivienda_tipo) & 
+         q42_vivienda_tipo != "Prefiero no responder") %>%  
+  mutate(q42_vivienda_tipo = case_when(
+    q42_vivienda_tipo %in% c("Pieza de inquilinato", "Pieza de hotel familiar o pensión") ~ "Pieza de inquilinato o de hotel",
+    q42_vivienda_tipo %in% c("Casilla", "Rancho") ~ "Rancho o casilla",
+    TRUE ~ q42_vivienda_tipo)) %>%  #Recodifica para agrupar categorías 
+  group_by(q42_vivienda_tipo) %>%   # Agrupar por tipo de vivienda
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  #Calcula distribución
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% #Calcula porcentaje
+  arrange(desc(Porcentaje)) %>%  # Ordenar de mayor a menor
+  rename("Tipo vivienda"=q42_vivienda_tipo) #Renombra variable
+
+# Imprimir la tabla
+knitr::kable(grafico_6.3) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 6.4: Tipo de vivienda por regiones
+
+```{r graf_6.4, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q42_vivienda_tipo = na_if(q42_vivienda_tipo, ""))
+
+#Gráfico 6.4
+grafico_6.4 <- enma1 %>%
+  filter(!is.na(q42_vivienda_tipo) & 
+         q42_vivienda_tipo != "Prefiero no responder" & 
+         !is.na(region_amba_agrup)) %>%  # Filtra datos
+  mutate(q42_vivienda_tipo = case_when(
+    q42_vivienda_tipo %in% c("Pieza de inquilinato", "Pieza de hotel familiar o pensión") ~ "Pieza de inquilinato o de hotel",
+    q42_vivienda_tipo %in% c("Casilla", "Rancho") ~ "Rancho o casilla",
+    TRUE ~ q42_vivienda_tipo)) %>%   #Recodifica para agrupar categorías 
+  group_by(region_amba_agrup, q42_vivienda_tipo) %>%   # Agrupar por región y tipo de vivienda
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  # Calcula distribución ponderada
+  group_by(region_amba_agrup) %>%
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%  # Calcula % dentro de cada región
+  select(region_amba_agrup, q42_vivienda_tipo, Porcentaje) %>%  # Mantener solo % y variables clave
+  pivot_wider(names_from = q42_vivienda_tipo, values_from = Porcentaje, values_fill = 0) %>%  # Tabla de doble entrada
+  rename("Región" = region_amba_agrup)  # Renombrar variable
+
+# Imprimir la tabla
+knitr::kable(grafico_6.4) %>%
+  kable_minimal()
+
+```
+
+
+## Gráfico 6.5: Distribución de la condición de tenencia de la vivienda de la población migrante según tiempo de residencia (en porcentaje)
+
+```{r graf_6.5, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(tiempo_residencia_agrup = na_if(tiempo_residencia_agrup, ""))
+
+#Gráfico 6.5
+grafico_6.5 <- enma1 %>%
+  filter(!is.na(q43_vivienda_es) & 
+         q43_vivienda_es != "Otro" & q43_vivienda_es!="Prefiero no responder" &
+         !is.na(tiempo_residencia_agrup)) %>%  # Filtra valores no deseados
+  mutate(q43_vivienda_es = case_when(
+    q43_vivienda_es %in% c("Me lo prestan temporalmente", "Me lo proporciona mi empleador como parte de pago", "Me lo prestan indefinidamente", "Vivienda ocupada") ~ "Préstamo, inercambio laboral y ocupación",
+    TRUE ~ q43_vivienda_es)) %>%   #Recodifica para agrupar categorías 
+  group_by(tiempo_residencia_agrup, q43_vivienda_es) %>%   # Agrupar por tiempo de residencia y tipo tenencia de vivienda
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  # Calcula distribución ponderada
+  group_by(tiempo_residencia_agrup) %>%
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%  # Calcula % dentro de cada categoría
+  select("Tiempo residencia"=tiempo_residencia_agrup, q43_vivienda_es, Porcentaje) %>%  # Mantener solo % y variables clave
+  pivot_wider(names_from = q43_vivienda_es, values_from = Porcentaje, values_fill = 0)  # Tabla de doble entrada
+
+# Imprimir la tabla
+knitr::kable(grafico_6.5) %>%
+  kable_minimal()
+
+```
+
+
+## Gráfico 6.6: Distribución de la condición de tenencia de la vivienda de la población migrante según país de origen
+
+```{r graf_6.6, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Creación de un vector con las nacionalidades seleccionadas
+nacionalidades <- c("Brasil", "Paraguay", "Chile", "Perú", "Venezuela", "Uruguay", "Bolivia", 
+                    "Colombia", "España", "Italia")
+
+#Gráfico 6.6
+grafico_6.6 <- enma %>%
+  filter(!is.na(q43_vivienda_es) & 
+         q43_vivienda_es != "Otro" & q43_vivienda_es!="Prefiero no responder" &
+         q3_pais_nacimiento %in% nacionalidades) %>%  # Filtra valores no deseados
+  mutate(q43_vivienda_es = case_when(
+    q43_vivienda_es %in% c("Me lo prestan temporalmente", "Me lo proporciona mi empleador como parte de pago", "Me lo prestan indefinidamente", "Vivienda ocupada") ~ "Préstamo, inercambio laboral y ocupación",
+    TRUE ~ q43_vivienda_es)) %>%   #Recodifica para agrupar categorías 
+  group_by(q3_pais_nacimiento, q43_vivienda_es) %>%   # Agrupar por nacionalidad y tenencia de la vivienda
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  # Calcula distribución ponderada
+  group_by(q3_pais_nacimiento) %>%
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%  # Calcula % dentro de cada nacionalidad
+  select("Nacionalidad"=q3_pais_nacimiento, q43_vivienda_es, Porcentaje) %>%  # Mantener solo % y variables clave
+  pivot_wider(names_from = q43_vivienda_es, values_from = Porcentaje, values_fill = 0)  # Tabla de doble entrada
+
+
+# Imprimir la tabla
+knitr::kable(grafico_6.6) %>%
+  kable_minimal()
+
+```
+
+## Cuadro 6.1: Proporción de personas migrantes que acceden a servicios básicos según tipo de servicio y región de residencia (en porcentaje)
+
+```{r cuadro_6.1, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q45_vivienda_servicios= na_if(q45_vivienda_servicios, ""))
+
+#Cuadro 6.1
+cuadro_6.1 <- enma1 %>%
+  filter(!is.na(q45_vivienda_servicios) & !is.na(region_amba_agrup)) %>%  # Filtra valores no deseados
+# Convertir variables en binarias
+  mutate(
+    q45_vivienda_servicios_luz=ifelse(q45_vivienda_servicios_luz==1 | q45_vivienda_servicios_todos==1,1,0),
+    q45_vivienda_servicios_agua=ifelse(q45_vivienda_servicios_agua==1 | q45_vivienda_servicios_todos==1,1,0),
+    q45_vivienda_servicios_gas=ifelse(q45_vivienda_servicios_gas==1 | q45_vivienda_servicios_todos==1,1,0),
+    q45_vivienda_servicios_cloaca=ifelse(q45_vivienda_servicios_cloaca==1 | q45_vivienda_servicios_todos==1,1,0),
+    q45_vivienda_servicios_alumbrado=ifelse(q45_vivienda_servicios_alumbrado==1 | q45_vivienda_servicios_todos==1,1,0),
+    q45_vivienda_servicios_pavimentacion=ifelse(q45_vivienda_servicios_pavimentacion==1 | q45_vivienda_servicios_todos==1,1,0),
+    q45_vivienda_servicios_rec_basura=ifelse(q45_vivienda_servicios_rec_basura==1 | q45_vivienda_servicios_todos==1,1,0),
+    q45_vivienda_servicios_telefono=ifelse(q45_vivienda_servicios_telefono==1 | q45_vivienda_servicios_todos==1,1,0),
+    q45_vivienda_servicios_internet=ifelse(q45_vivienda_servicios_internet==1 | q45_vivienda_servicios_todos==1,1,0)) %>% 
+  group_by(region_amba_agrup) %>% 
+  # Calcular el total ponderado de la población y de cada tipo de servicio
+  summarise(
+    Poblacion = round(sum(weightvec, na.rm = TRUE), 0),
+    luz=round(sum(weightvec*q45_vivienda_servicios_luz, na.rm = TRUE),0),
+    agua=round(sum(weightvec*q45_vivienda_servicios_agua, na.rm = TRUE),0),
+    gas=round(sum(weightvec*q45_vivienda_servicios_gas, na.rm = TRUE),0),
+    cloaca=round(sum(weightvec*q45_vivienda_servicios_cloaca, na.rm = TRUE),0),
+    alumbrado=round(sum(weightvec*q45_vivienda_servicios_alumbrado, na.rm = TRUE),0),
+    pavimentacion=round(sum(weightvec*q45_vivienda_servicios_pavimentacion, na.rm = TRUE),0),
+    basura=round(sum(weightvec*q45_vivienda_servicios_rec_basura, na.rm = TRUE),0),
+    tel=round(sum(weightvec*q45_vivienda_servicios_telefono, na.rm = TRUE),0),
+    internet=round(sum(weightvec*q45_vivienda_servicios_internet, na.rm = TRUE),0)) %>% 
+  # Calcular los porcentajes de cada servicio sobre el total de la población
+  mutate(
+    'Luz'= round(luz / Poblacion * 100, 1),
+    'Agua corriente' = round(agua / Poblacion * 100, 1),
+    'Gas' = round(gas / Poblacion * 100, 1),
+    'Cloacas'= round(cloaca/ Poblacion * 100, 1),
+    'Alumbrado'= round(alumbrado / Poblacion * 100, 1),
+    'Pavimentación' = round(pavimentacion/ Poblacion * 100, 1),
+    'Recolección de basura' = round(basura/ Poblacion * 100, 1),
+    'Teléfono fijo' = round(tel / Poblacion * 100, 1),
+    'Internet' = round(internet/ Poblacion * 100, 1)) %>% 
+  select("Región"=1, 12:20) # Seleccionar solo las columnas con los porcentajes calculados
+
+# Imprimir la tabla
+knitr::kable(cuadro_6.1) %>%
+  kable_minimal()
+```
+
+## Gráfico 6.7: Principales problemas en el acceso a la vivienda en los últimos 2 años para la población migrante (en porcentaje). Selección múltiple
+
+```{r graf_6.7, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q44_vivienda_problemas= na_if(q44_vivienda_problemas, ""))
+
+#Gráfico 6.7
+grafico_6.7 <- enma1 %>%
+  filter(!is.na(q44_vivienda_problemas) & q44_vivienda_problemas_no==0) %>%  # Filtra valores no deseados
+# Convertir variables en binarias
+  mutate(
+    q44_precio=ifelse(q44_vivienda_problemas_precio==1,1,0),
+    q44_compra=ifelse(q44_vivienda_problemas_compra==1,1,0),
+    q44_ayudas=ifelse(q44_vivienda_problemas_ayudasocial==1,1,0),
+    q44_garantia=ifelse( q44_vivienda_problemas_garantia==1,1,0),
+    q44_discriminacion=ifelse( q44_vivienda_problemas_discriminacion==1,1,0),
+    q44_estafa=ifelse(q44_vivienda_problemas_estafa==1,1,0),
+    q44_desalojo=ifelse( q44_vivienda_problemas_desalojo==1,1,0),
+    q44_otros=ifelse( q44_vivienda_problemas_otra==1,1,0),
+    ) %>% 
+  # Calcular el total ponderado de la población y de cada tipo de situación
+  summarise(
+    Poblacion = round(sum(weightvec, na.rm = TRUE), 0),
+    precio=round(sum(weightvec*q44_precio, na.rm = TRUE),0),
+    compra=round(sum(weightvec*q44_compra, na.rm = TRUE),0),
+    ayudas=round(sum(weightvec*q44_ayudas, na.rm = TRUE),0),
+    garantia=round(sum(weightvec*q44_garantia, na.rm = TRUE),0),
+    discriminacion=round(sum(weightvec*q44_discriminacion, na.rm = TRUE),0),
+    estafa=round(sum(weightvec*q44_estafa, na.rm = TRUE),0),
+    desalojo=round(sum(weightvec*q44_desalojo, na.rm = TRUE),0),
+    otros=round(sum(weightvec*q44_otros, na.rm = TRUE),0)) %>% 
+  # Calcular los porcentajes de cada cateogría sobre el total de la población
+  mutate(
+    'Aumento de alquiler'= round(precio / Poblacion * 100, 1),
+    'Sin acceso a compra' = round(compra / Poblacion * 100, 1),
+    'Falta de garantía y otros requisitos' = round(garantia / Poblacion * 100, 1),
+    'Falta acceso a ayudas de vivienda'= round(ayudas/ Poblacion * 100, 1),
+    'Discriminación'= round(discriminacion / Poblacion * 100, 1),
+    'Estafa' = round(estafa/ Poblacion * 100, 1),
+    'Desalojo' = round(desalojo/ Poblacion * 100, 1),
+    'Otros problemas' = round(otros / Poblacion * 100, 1)) %>% 
+  select(10:17) %>%  # Seleccionar solo las columnas con los porcentajes calculados
+  pivot_longer(cols = everything(), names_to = "Problema", values_to = "Porcentaje")  # Girar la tabla
+
+# Imprimir la tabla
+knitr::kable(grafico_6.7) %>%
+  kable_minimal()
+```
+
+## Gráfico 6.8: Proporción de personas migrantes que experimentó problemas en el acceso a la vivienda en los últimos 2 años según grupos de edad (en porcentaje)
+
+```{r graf_6.8, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q44_vivienda_problemas= na_if(q44_vivienda_problemas, ""))
+
+#Gráfico 6.8
+grafico_6.8 <- enma1 %>%
+  filter(!is.na(q44_vivienda_problemas) & !is.na(edad_agrup)) %>%  # Filtra valores no deseados
+# Convertir variables en binarias
+  mutate(
+    q44_prob=ifelse((q44_vivienda_problemas_precio==1 | q44_vivienda_problemas_discriminacion==1 | q44_vivienda_problemas_garantia==1 | q44_vivienda_problemas_compra==1 | q44_vivienda_problemas_ayudasocial==1 | q44_vivienda_problemas_desalojo==1 | q44_vivienda_problemas_estafa==1 | q44_vivienda_problemas_otra==1),1,0)) %>% 
+  group_by(edad_agrup) %>% 
+  # Calcular el total ponderado de la población y de cada tipo de situación
+  summarise(
+    Poblacion = round(sum(weightvec, na.rm = TRUE), 0),
+    prob=round(sum(weightvec*q44_prob, na.rm = TRUE),0)) %>% 
+  # Calcular los porcentajes de cada situación sobre el total de la población
+  mutate(
+    'Experimentó problemas'= round(prob / Poblacion * 100, 1)) %>% 
+  select("Grupos de edad"=1,4)
+
+# Imprimir la tabla
+knitr::kable(grafico_6.8) %>%
+  kable_minimal()
+```
+
+## Gráfico 6.9: Proporción de personas migrantes según país de origen que experimentaron dificultades en el acceso a la vivienda identificados en los últimos 2 años (en porcentaje)
+
+```{r graf_6.9, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Creación de un vector con las nacionalidades seleccionadas
+nacionalidades <- c("Brasil", "Paraguay", "Chile", "Perú", "Venezuela", "Uruguay", "Bolivia", 
+                    "Colombia", "España", "Italia", "Haití")
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q44_vivienda_problemas= na_if(q44_vivienda_problemas, ""))
+
+#Gráfico 6.9
+grafico_6.9 <- enma1 %>%
+  filter(!is.na(q44_vivienda_problemas) & q3_pais_nacimiento %in% nacionalidades) %>%  # Filtra valores no deseados
+# Convertir variables en binarias
+  mutate(
+    q44_prob=ifelse((q44_vivienda_problemas_precio==1 | q44_vivienda_problemas_discriminacion==1 | q44_vivienda_problemas_garantia==1 | q44_vivienda_problemas_compra==1 | q44_vivienda_problemas_ayudasocial==1 | q44_vivienda_problemas_desalojo==1 | q44_vivienda_problemas_estafa==1 | q44_vivienda_problemas_otra==1),1,0)) %>% 
+  group_by(q3_pais_nacimiento) %>% 
+  # Calcular el total ponderado de cada categoría y de la poblaicón
+  summarise(
+    Poblacion = round(sum(weightvec, na.rm = TRUE), 0),
+    prob=round(sum(weightvec*q44_prob, na.rm = TRUE),0)) %>% 
+  # Calcular los porcentajes categoría sobre la población
+  mutate(
+    'Experimentó problemas'= round(prob / Poblacion * 100, 1)) %>% 
+  select("Nacionalidad"=1,4) %>%
+  arrange(desc('Experimentó problemas')) #Ordena de mayor a menor
+
+# Imprimir la tabla
+knitr::kable(grafico_6.9) %>%
+  kable_minimal()
+```

@@ -1,0 +1,390 @@
+---
+title: "Capítulo 4: Salud"
+output: html_document
+---
+
+## Instalación y carga de librerías necesarias
+
+```{r librerias, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Cargar librerías
+library(tidyverse)  # Manipulación y visualización de datos
+library(readxl)     # Lectura de archivos Excel
+library(janitor)    # Limpieza y estandarización de nombres de variables
+library(knitr)      # Generación de tablas en documentos dinámicos
+library(kableExtra) # Mejora en la presentación de tablas
+```
+
+## Carga de la base de datos ENMA 2023
+
+```{r carga, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Carga del archivo CSV con la base de datos de la ENMA 2023
+enma <- read.csv("data/ENMA2023_final_public.csv")
+
+# Alternativamente, para leer desde un archivo Excel descomentar la siguiente línea:
+# enma <- read_xlsx("data/ENMA2023_final_public.xlsx", sheet = 1)
+
+
+```
+
+## Exploración inicial de la base de datos
+
+```{r exploración, eval=FALSE, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Mostrar los nombres de las variables en la base de datos
+names(enma)
+
+# Para ver la estructura de la base de datos descomentar la siguiente línea:
+str(enma)
+
+```
+
+## Gráfico 4.2. Distribución del tipo de cobertura de salud de la población migrante según grupos de edad (en porcentaje)**
+
+```{r graf_4.2, echo=T, message=F, warning=F}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q36_salud= na_if(q36_salud, ""))
+
+# Gráfico 4.2
+grafico_4.2 <- enma1 %>%
+  mutate(q36_salud=case_when(
+    q36_salud=="No sé" ~ NA_character_,
+    TRUE ~ q36_salud) #Recodifico para agrupar categorías
+) %>% 
+  filter(!is.na(q36_salud) & !is.na(edad_agrup)) %>%  #Filtra datos
+  group_by(q36_salud, edad_agrup) %>%   # Agrupar por salud y edad
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%# Calcular el total ponderado de cada combinación
+  group_by(edad_agrup) %>%
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% # Calcular el porcentaje dentro de cada grupo
+  select("Grupos de edad"=edad_agrup, q36_salud, Porcentaje) %>% #Seleccionar variables
+  pivot_wider(names_from = q36_salud, values_from = Porcentaje)# Convertir a formato de tabla de doble entrada
+
+# Imprimir la tabla
+knitr::kable(grafico_4.2) %>% 
+  kable_minimal()
+
+```
+
+## Gráfico 4.3. Distribución del tipo de cobertura de salud de la población migrante según tiempo de residencia (en porcentajes)**
+
+```{r graf4.3, echo=T, message=F, warning=F}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q36_salud= na_if(q36_salud, "")) %>% 
+  mutate(tiempo_residencia_agrup= na_if(tiempo_residencia_agrup, ""))
+
+# Gráfico 4.3
+grafico_4.3 <- enma1 %>%
+  mutate(q36_salud=case_when(
+    q36_salud=="No sé" ~ NA_character_,
+    TRUE ~ q36_salud) #Recodifico para agrupar categorías
+) %>% 
+  filter(!is.na(q36_salud) & !is.na(tiempo_residencia_agrup)) %>%  #Filtra datos
+  group_by(q36_salud, tiempo_residencia_agrup) %>%   # Agrupar por salud y tiempo de residencia
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%# Calcular el total ponderado de cada combinación
+  group_by(tiempo_residencia_agrup) %>%
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% # Calcular el porcentaje dentro de cada grupo
+  select("Tiempo de residencia"=tiempo_residencia_agrup, q36_salud, Porcentaje) %>% #Seleccionar variables
+  pivot_wider(names_from = q36_salud, values_from = Porcentaje)# Convertir a formato de tabla de doble entrada
+
+
+# Imprimir la tabla
+knitr::kable(grafico_4.3) %>% 
+  kable_minimal()
+
+```
+
+## Gráfico 4.4. Proporción de personas migrantes que acudieron al sistema de salud en los últimos dos años según tipo de problema (en porcentaje). Selección múltiple
+
+```{r graf_4.4, echo=T, message=F, warning=F}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q37_salud_problemas = na_if(q37_salud_problemas, ""))
+
+# Filtrar respuestas válidas y calcular porcentajes
+grafico_4.4 <- enma1 %>%
+  filter(!is.na(q37_salud_problemas)) %>%
+  summarise(
+    Total = sum(weightvec, na.rm = TRUE),
+    `Salud física` = round(sum(weightvec[q37_salud_problemas_fisica == 1], na.rm = TRUE) / Total * 100, 1),
+    `Salud mental` = round(sum(weightvec[q37_salud_problemas_mental == 1], na.rm = TRUE) / Total * 100, 1),
+    `Salud sexual y/o reproductiva` = round(sum(weightvec[q37_salud_problemas_esi == 1], na.rm = TRUE) / Total * 100, 1),
+    `No acudí al sistema de salud` = round(sum(weightvec[q37_salud_problemas_no == 1], na.rm = TRUE) / Total * 100, 1)
+  ) %>%
+  pivot_longer(cols = -Total, names_to = "Problemas", values_to = "Porcentaje") %>%
+  select(-Total) %>%  # Elimina la columna Total
+  arrange(desc(Porcentaje))  # Ordenar de mayor a menor porcentaje
+
+# Imprimir tabla
+knitr::kable(grafico_4.4) %>%
+  kable_minimal()
+
+
+
+```
+
+## Gráfico 4.5. Principales formas de acceso a la atención de la salud en los últimos dos años de la población migrante (en porcentaje). Selección múltiple
+
+```{r graf_4.5, echo=T, message=F, warning=F}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q38_salud_resolver_problema = na_if(q38_salud_resolver_problema, ""))
+
+# Convertir variables en binarias (1 si se usó el servicio, 0 en caso contrario)
+grafico_4.5 <- enma1 %>%
+  mutate(
+    hospital_publico = ifelse(q38_salud_resolver_problema_hospitalpub == 1, 1, 0),
+    prepaga = ifelse(q38_salud_resolver_problema_prepaga == 1, 1, 0),
+    pago_consulta = ifelse(q38_salud_resolver_problema_pago_consulta == 1, 1, 0),
+    centro_primario = ifelse(q38_salud_resolver_problema_cen_ate_prim == 1, 1, 0),
+    nunca_necesito = ifelse(q38_salud_resolver_problema_no == 1, 1, 0),
+    recomendaciones = ifelse(q38_salud_resolver_problema_recomendaciones == 1, 1, 0),
+    medicina_tradicional = ifelse(q38_salud_resolver_problema_tracional == 1, 1, 0),
+    no_atencion = ifelse(q38_salud_resolver_problema_imposibilidad == 1, 1, 0),
+    otro = ifelse(q38_salud_resolver_problema_otro == 1, 1, 0)) %>% 
+# Filtrar respuestas válidas y calcular porcentajes
+  filter(!is.na(q38_salud_resolver_problema)) %>% 
+  summarise(
+    Poblacion = round(sum(weightvec, na.rm = TRUE), 0),
+    hospital_publico = round(sum(weightvec * hospital_publico, na.rm = TRUE), 0),
+    prepaga = round(sum(weightvec * prepaga, na.rm = TRUE), 0),
+    pago_consulta = round(sum(weightvec * pago_consulta, na.rm = TRUE), 0),
+    centro_primario = round(sum(weightvec * centro_primario, na.rm = TRUE), 0),
+    nunca_necesito = round(sum(weightvec * nunca_necesito, na.rm = TRUE), 0),
+    recomendaciones = round(sum(weightvec * recomendaciones, na.rm = TRUE), 0),
+    medicina_tradicional = round(sum(weightvec * medicina_tradicional, na.rm = TRUE), 0),
+    no_atencion = round(sum(weightvec * no_atencion, na.rm = TRUE), 0),
+    otro = round(sum(weightvec * otro, na.rm = TRUE), 0)) %>%
+  # Calcular los porcentajes de cada tipo de acceso a salud sobre el total
+  mutate(
+    `Hospitales públicos` = round(hospital_publico / Poblacion * 100, 1),
+    `Obra social o prepaga` = round(prepaga / Poblacion * 100, 1),
+    `Pago por consulta o atención` = round(pago_consulta / Poblacion * 100, 1),
+    `Centros de Atención Primaria` = round(centro_primario / Poblacion * 100, 1),
+    `Nunca necesitó atención` = round(nunca_necesito / Poblacion * 100, 1),
+    `Recomendaciones familiares o automedicación` = round(recomendaciones / Poblacion * 100, 1),
+    `Medicina tradicional` = round(medicina_tradicional / Poblacion * 100, 1),
+    `No pudo atenderse en ningún lugar` = round(no_atencion / Poblacion * 100, 1),
+    `Otro` = round(otro / Poblacion * 100, 1)) %>% 
+  select(11:19) %>%  # Seleccionar solo las columnas con los porcentajes calculados
+  pivot_longer(cols = everything(), names_to = "Categoría", values_to = "Porcentaje")  # Girar la tabla
+
+# Imprimir tabla
+knitr::kable(grafico_4.5) %>%
+  kable_minimal()
+
+```
+
+
+**Gráfico 4.6. Frecuencia de las dificultades para el acceso a los servicios públicos de salud de la población migrante (en porcentaje)**
+
+```{r graf_4.6, echo=T, message=F, warning=F}
+
+
+# Genera el cuadro 4.6
+grafico_4.6 <- enma %>%
+  mutate(q39_agrup = case_when(
+    q39_salud_acceso %in% c("Siempre", "Frecuentemente", "Alguna vez") ~ "Dificultades (al menos una vez)",
+    q39_salud_acceso == "Nunca" ~ "Sin dificultades de acceso a la salud",
+    q39_salud_acceso == "Nunca me atendí" ~ "Nunca me atendí",
+    TRUE ~ NA_character_ # Especificar como NA de caracteres para evitar problemas
+  )) %>%
+  group_by(q39_agrup) %>%
+  summarise(
+    Cantidad = sum(weightvec, na.rm = TRUE) %>% round(),
+    .groups = "drop" # Evita mensajes de agrupamiento
+  ) %>%
+  mutate(Porcentaje = round((Cantidad / sum(Cantidad)) * 100, 1)) %>%
+  arrange(desc(Porcentaje)) %>%
+  rename("Acceso a servicios públicos de salud" = q39_agrup)
+
+# Imprimir tabla
+knitr::kable(grafico_4.6) %>%
+  kable_minimal()
+
+
+```
+
+
+## Gráfico 4.7. Frecuencia de las dificultades para el acceso a los servicios públicos de salud de la población migrante según género (en porcentaje)
+
+```{r graf_4.7, echo=T, message=F, warning=F}
+
+# Gráfico 4.7
+grafico_4.7 <- enma %>%
+  mutate(q39_agrup = case_when(
+    q39_salud_acceso %in% c("Siempre", "Frecuentemente", "Alguna vez") ~ "Dificultades (al menos una vez)",
+    q39_salud_acceso == "Nunca" ~ "Sin dificultades de acceso a la salud",
+    q39_salud_acceso == "Nunca me atendí" ~ "Nunca me atendí",
+    TRUE ~ NA_character_
+  )) %>% #Recodifica variable para agrupar
+  filter(genero_agrup %in% c("Mujer", "Varón") & !is.na(q39_agrup)) %>% #Filtra datos
+  group_by(q39_agrup, genero_agrup) %>% #Agrupa por género y acceso salud
+  summarise(Cantidad = sum(weightvec, na.rm = TRUE), .groups = "drop") %>%
+  group_by(genero_agrup) %>%
+  mutate(Porcentaje = round((Cantidad / sum(Cantidad)) * 100, 1)) %>% #Calcula porcentaje para cada género
+  select(-Cantidad) %>% 
+  pivot_wider(names_from = genero_agrup, values_from = Porcentaje, values_fill = 0) %>% #Gira tabla
+  arrange(desc(Varón)) %>%  # Ordena la tabla según la columna "Varón" de mayor a menor
+  rename("Acceso salud"=1) #Renombra variable
+
+# Imprimir tabla
+knitr::kable(grafico_4.7) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 4.8. Frecuencia de las dificultades para el acceso a los servicios públicos de salud de la población migrante según región de residencia (en porcentaje)
+
+```{r  graf_4.8, echo=T, message=F, warning=F}
+
+# Gráfico 4.8
+grafico_4.8 <- enma %>%
+  mutate(q39_agrup = case_when(
+    q39_salud_acceso %in% c("Siempre", "Frecuentemente", "Alguna vez") ~ "Dificultades (al menos una vez)",
+    q39_salud_acceso == "Nunca" ~ "Sin dificultades de acceso a la salud",
+    q39_salud_acceso == "Nunca me atendí" ~ "Nunca me atendí",
+    TRUE ~ NA_character_
+  )) %>% #Recodifica variable para agrupar
+  filter(!is.na(region_amba_agrup) & !is.na(q39_agrup)) %>% #Filtra datos
+  group_by(q39_agrup, region_amba_agrup) %>%
+  summarise(Cantidad = sum(weightvec, na.rm = TRUE), .groups = "drop") %>%
+  group_by(region_amba_agrup) %>%
+  mutate(Porcentaje = round((Cantidad / sum(Cantidad)) * 100, 1)) %>% #Calcula porcentaje para cada categoría
+  select(-Cantidad) %>% 
+  pivot_wider(names_from = region_amba_agrup, values_from = Porcentaje, values_fill = 0) %>% #Gira tabla
+  rename("Acceso salud"=1) #Renombra variable
+
+# Imprimir tabla
+knitr::kable(grafico_4.8) %>%
+  kable_minimal()
+
+
+
+```
+
+## Gráfico 4.9. Frecuencia de las dificultades para el acceso a los servicios públicos de salud de la población migrante según región de origen (en porcentaje)
+
+```{r graf_4.9, echo=T, message=F, warning=F}
+
+# Gráfico 4.9
+grafico_4.9 <- enma %>%
+  mutate(q39_agrup = case_when(
+    q39_salud_acceso %in% c("Siempre", "Frecuentemente", "Alguna vez") ~ "Dificultades (al menos una vez)",
+    q39_salud_acceso == "Nunca" ~ "Sin dificultades de acceso a la salud",
+    q39_salud_acceso == "Nunca me atendí" ~ "Nunca me atendí",
+    TRUE ~ NA_character_
+  )) %>% #Recodifica variable para agrupar
+  filter(!is.na(nacionalidad_agrup) & nacionalidad_agrup!="APÁTRIDA" & !is.na(q39_agrup)) %>% #Filtra datos
+  group_by(q39_agrup, nacionalidad_agrup) %>%
+  summarise(Cantidad = sum(weightvec, na.rm = TRUE), .groups = "drop") %>%
+  group_by(nacionalidad_agrup) %>%
+  mutate(Porcentaje = round((Cantidad / sum(Cantidad)) * 100, 1)) %>% #Calcula porcentaje para cada categoría
+  select(-Cantidad) %>% 
+  pivot_wider(names_from = nacionalidad_agrup, values_from = Porcentaje, values_fill = 0) %>% #Gira tabla
+  rename("Acceso salud"=1) #Renombra variable
+
+
+# Imprimir cuadro
+knitr::kable(grafico_4.9) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 4.10. Frecuencia de las dificultades para el acceso a los servicios públicos de salud de la población migrante según país de origen (en porcentaje)
+
+```{r graf_4.10, echo=T, message=F, warning=F}
+
+# Creación de un vector con las nacionalidades seleccionadas
+nacionalidades <- c("Italia", "Brasil", "Paraguay", "Chile", "España", "Perú", "Venezuela", "Uruguay", "Bolivia", "Colombia")
+
+# Gráfico 4.10
+grafico_4.10 <- enma %>%
+  mutate(q39_agrup = case_when(
+    q39_salud_acceso %in% c("Siempre", "Frecuentemente", "Alguna vez") ~ "Dificultades (al menos una vez)",
+    q39_salud_acceso == "Nunca" ~ "Sin dificultades de acceso a la salud",
+    q39_salud_acceso == "Nunca me atendí" ~ "Nunca me atendí",
+    TRUE ~ NA_character_
+  )) %>% #Recodifica variable para agrupar
+  filter(q3_pais_nacimiento %in% nacionalidades & !is.na(q39_agrup)) %>% #Filtra datos
+  group_by(q39_agrup, q3_pais_nacimiento) %>%
+  summarise(Cantidad = sum(weightvec, na.rm = TRUE), .groups = "drop") %>%
+  group_by(q3_pais_nacimiento) %>%
+  mutate(Porcentaje = round((Cantidad / sum(Cantidad)) * 100, 1)) %>% #Calcula porcentaje para cada categoría
+  select(-Cantidad) %>% 
+  pivot_wider(names_from = q3_pais_nacimiento, values_from = Porcentaje, values_fill = 0) %>% #Gira tabla
+  rename("Acceso salud"=1) #Renombra variable
+
+
+# Imprimir cuadro
+knitr::kable(grafico_4.10) %>%
+  kable_minimal()
+
+```
+
+
+## Gráfico 4.11. Principales dificultades para el acceso a los servicios públicos de salud de la población migrante (en porcentaje). Selección múltiple
+
+```{r graf_4.11, echo=T, message=F, warning=F}
+
+# Convertir campos vacíos en NA
+enma1 <- enma %>%
+  mutate(q40_salud_acceso_dificultades = na_if(q40_salud_acceso_dificultades, ""))
+
+#Gráfico 4.11
+grafico_4.11 <- enma1 %>%
+  # Crear variables binarias para cada tipo de dificultad
+  mutate(
+    dni = ifelse(q40_salud_acceso_dificultades_dni == 1, 1, 0),
+    domicilio = ifelse(q40_salud_acceso_dificultades_domicilio == 1, 1, 0),
+    maltrato = ifelse(q40_salud_acceso_dificultades_maltrato == 1, 1, 0),
+    pago = ifelse(q40_salud_acceso_dificultades_pago == 1, 1, 0),
+    desconocimiento = ifelse(q40_salud_acceso_dificultades_desconocimiento == 1, 1, 0),
+    turnos = ifelse(q40_salud_acceso_dificultades_turnos == 1, 1, 0),
+    idioma = ifelse(q40_salud_acceso_dificultades_idioma == 1, 1, 0),
+    otra = ifelse(q40_salud_acceso_dificultades_otra == 1, 1, 0)
+  ) %>%
+  # Filtrar respuestas válidas
+  filter(!is.na(q40_salud_acceso_dificultades)) %>%
+  # Calcular totales ponderados para cada tipo de dificultad
+  summarise(
+    Poblacion = round(sum(weightvec, na.rm = TRUE), 0),
+    dni = round(sum(weightvec * dni, na.rm = TRUE), 0),
+    domicilio = round(sum(weightvec * domicilio, na.rm = TRUE), 0),
+    maltrato = round(sum(weightvec * maltrato, na.rm = TRUE), 0),
+    pago = round(sum(weightvec * pago, na.rm = TRUE), 0),
+    desconocimiento = round(sum(weightvec * desconocimiento, na.rm = TRUE), 0),
+    turnos = round(sum(weightvec * turnos, na.rm = TRUE), 0),
+    idioma = round(sum(weightvec * idioma, na.rm = TRUE), 0),
+    otra = round(sum(weightvec * otra, na.rm = TRUE), 0)
+  ) %>%
+  # Calcular el porcentaje de cada dificultad sobre el total
+  mutate(
+    `Me exigieron presentación del DNI argentino` = round(dni / Poblacion * 100, 1),
+    `Me exigieron que tenga domicilio en la ciudad/destino` = round(domicilio / Poblacion * 100, 1),
+    `Recibí malos tratos o discriminación por parte del personal del establecimiento de salud` = round(maltrato / Poblacion * 100, 1),
+    `Me exigieron que pague por la atención` = round(pago / Poblacion * 100, 1),
+    `Me falta información/no sé realizar los trámites de salud` = round(desconocimiento / Poblacion * 100, 1),
+    `Problemas con los turnos` = round(turnos / Poblacion * 100, 1),
+    `Dificultades con el idioma` = round(idioma / Poblacion * 100, 1),
+    `Otras` = round(otra / Poblacion * 100, 1)
+  ) %>%
+  select(10:17) %>%  # Seleccionar solo las columnas con los porcentajes calculados
+  pivot_longer(cols = everything(), names_to = "Dificultades", values_to = "Porcentaje") %>% 
+  arrange(Dificultades == "Otras", desc(Porcentaje))  # Ordenar los datos
+
+
+
+# Imprimir cuadro
+knitr::kable(grafico_4.11) %>%
+  kable_minimal()
+
+```
+
+

@@ -1,0 +1,526 @@
+---
+title: "Anuario ENMA 2023 - Capítulo 7"
+output: html_document
+---
+
+## Instalación y carga de librerías necesarias
+
+```{r librerias, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Cargar librerías
+library(tidyverse)  # Manipulación y visualización de datos
+library(readxl)     # Lectura de archivos Excel
+library(janitor)    # Limpieza y estandarización de nombres de variables
+library(knitr)      # Generación de tablas en documentos dinámicos
+library(kableExtra) # Mejora en la presentación de tablas
+```
+
+
+## Carga de la base de datos ENMA 2023
+
+```{r carga, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Carga del archivo CSV con la base de datos de la ENMA 2023
+enma <- read.csv("data/ENMA2023_final_public.csv")
+
+# Alternativamente, para leer desde un archivo Excel descomentar la siguiente línea:
+# enma <- read_xlsx("data/ENMA2023_final_public.xlsx", sheet = 1)
+
+
+```
+
+## Exploración inicial de la base de datos
+
+```{r exploración, eval=FALSE, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Mostrar los nombres de las variables en la base de datos
+names(enma)
+
+# Para ver la estructura de la base de datos descomentar la siguiente línea:
+str(enma)
+
+```
+
+## Gráfico 8.1: Participación en organizaciones (en porcentaje)
+
+```{r graf_8.1, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q66_participacion_organizacion = na_if(q66_participacion_organizacion, ""))
+
+
+# Gráfico 8.1
+grafico_8.1 <- enma1 %>%
+  filter(!is.na(q66_participacion_organizacion) & q66_participacion_organizacion!="Prefiero no responder") %>%  #Filtra datos
+  group_by(q66_participacion_organizacion) %>%   # Agrupar por participación en organizaciones
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  #Calcula distribución
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% #Calcula porcentaje
+  arrange(desc(Porcentaje)) %>%  # Ordenar de mayor a menor
+  rename("Participó en organizaciones"=q66_participacion_organizacion)
+
+# Imprimir la tabla
+knitr::kable(grafico_8.1) %>%
+  kable_minimal()
+
+
+```
+
+## Gráfico 8.2: Participación en organizaciones por región de residencia en la Argentina (en porcentaje)
+
+```{r graf_8.2, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q66_participacion_organizacion = na_if(q66_participacion_organizacion, ""))
+
+#Gráfico 8.2
+grafico_8.2 <- enma1 %>%
+  filter(!is.na(q66_participacion_organizacion) & q66_participacion_organizacion!="Prefiero no responder" & !is.na(region_amba_agrup)) %>%  # Filtra datos
+  group_by(region_amba_agrup, q66_participacion_organizacion) %>%  # Agrupa por región y participación
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  # Suma ponderada
+  group_by(region_amba_agrup) %>%  # Agrupa solo por región
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%  # Calcula % dentro de cada región
+  filter(q66_participacion_organizacion == "Sí") %>%  # Se queda solo con esta categoría
+  select("Región de residencia"=region_amba_agrup, Porcentaje) %>%  
+  arrange(desc(Porcentaje))  # Ordena de mayor a menor
+
+
+# Imprimir la tabla
+knitr::kable(grafico_8.2) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 8.3: Participación en organizaciones según tiempo de residencia en la Argentina (en porcentaje)
+
+```{r graf_8.3, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q66_participacion_organizacion = na_if(q66_participacion_organizacion, "")) %>% 
+  mutate(tiempo_residencia_agrup = na_if(tiempo_residencia_agrup, ""))
+
+#Gráfico 8.3
+grafico_8.3 <- enma1 %>%
+  filter(!is.na(q66_participacion_organizacion) & q66_participacion_organizacion!="Prefiero no responder" & !is.na(tiempo_residencia_agrup)) %>%  # Filtra datos
+  group_by(tiempo_residencia_agrup, q66_participacion_organizacion) %>%  # Agrupa por participación y tiempo de residencia
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  # Suma ponderada
+  group_by(tiempo_residencia_agrup) %>%  # Agrupa solo por tiempo de residencia
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%  # Calcula % dentro de cada categoría
+  filter(q66_participacion_organizacion == "Sí") %>%  # Se queda solo con esta categoría
+  select("Tiempo de residencia"=tiempo_residencia_agrup, Porcentaje) %>%  
+  arrange(desc(Porcentaje))  # Ordena de mayor a menor 
+
+
+
+# Imprimir la tabla
+knitr::kable(grafico_8.3) %>%
+  kable_minimal()
+
+```
+
+
+## Gráfico 8.4: Participación sociocomunitaria según tipo de organización (en porcentaje). Selección múltiple
+
+```{r graf_8.4, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q67_organizacion_= na_if(q67_organizacion_, ""))
+
+
+#Gráfico 8.4
+grafico_8.4 <- enma1 %>%
+  filter(!is.na(q67_organizacion_)) %>%  # Filtra valores no deseados
+# Convertir variables en binarias
+  mutate(
+    q67_organizacion_migrantes=ifelse(q67_organizacion_migrantes==1,1,0),
+    q67_organizacion_social=ifelse(q67_organizacion_social==1,1,0),
+    q67_organizacion_movimiento_social=ifelse(q67_organizacion_movimiento_social==1,1,0),
+    q67_organizacion_partido=ifelse(q67_organizacion_partido==1,1,0),
+    q67_organizacion_cooperativa=ifelse(q67_organizacion_cooperativa==1,1,0),
+    q67_organizacion_religiosa=ifelse(q67_organizacion_religiosa==1,1,0),
+    q67_organizacion_otra=ifelse(q67_organizacion_otra==1,1,0)) %>% 
+  # Calcular el total ponderado de la población
+  summarise(
+    Poblacion = round(sum(weightvec, na.rm = TRUE), 0),
+    migrantes=round(sum(weightvec*q67_organizacion_migrantes, na.rm = TRUE),0),
+    social=round(sum(weightvec*q67_organizacion_social, na.rm = TRUE),0),
+    movimiento_social=round(sum(weightvec*q67_organizacion_movimiento_social, na.rm = TRUE),0),
+    partido=round(sum(weightvec*q67_organizacion_partido, na.rm = TRUE),0),
+    cooperativa=round(sum(weightvec*q67_organizacion_cooperativa, na.rm = TRUE),0),
+    religiosa=round(sum(weightvec*q67_organizacion_religiosa, na.rm = TRUE),0),
+    otra=round(sum(weightvec*q67_organizacion_otra, na.rm = TRUE),0)) %>% 
+  # Calcular los porcentajes de tipo de organización sobre el total de la población que participa de organizaciones
+  mutate(
+    'Organización de migrantes'= round(migrantes / Poblacion * 100, 1),
+    'Organización social, barrial o comunitaria' = round(social / Poblacion * 100, 1),
+    'Movimiento social' = round(movimiento_social / Poblacion * 100, 1),
+    'Partido político'= round(partido/ Poblacion * 100, 1),
+    'Cooperativa de trabajo o sindicato'= round(cooperativa / Poblacion * 100, 1),
+    'Iglesia o comunidad religiosa' = round(religiosa/ Poblacion * 100, 1),
+    'Otra' = round(otra/ Poblacion * 100, 1)) %>% 
+  select(9:15) %>%   # Mantiene solo los porcentajes 
+  # Transformar a formato largo
+  pivot_longer(cols = everything(), names_to = "Tipo de organización", values_to = "Porcentaje")
+
+
+# Imprimir la tabla
+knitr::kable(grafico_8.4) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 8.5: Tipo de organización en la que participa la población migrante según nivel educativo (en porcentaje). Selección múltiple
+
+```{r graf_8.5, echo=TRUE, message=FALSE, warning=FALSE}
+
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(niveled_agrup= na_if(niveled_agrup, "")) %>% 
+  mutate(q67_organizacion_= na_if(q67_organizacion_, ""))
+
+#Gráfico 8.5
+grafico_8.5 <- enma1 %>%
+  filter(!is.na(q67_organizacion_) & !is.na(niveled_agrup)) %>%  # Filtra valores no deseados
+# Convertir variables en binarias
+  mutate(
+    q67_organizacion_migrantes=ifelse(q67_organizacion_migrantes==1,1,0),
+    q67_organizacion_social=ifelse(q67_organizacion_social==1,1,0),
+    q67_organizacion_movimiento_social=ifelse(q67_organizacion_movimiento_social==1,1,0),
+    q67_organizacion_partido=ifelse(q67_organizacion_partido==1,1,0),
+    q67_organizacion_cooperativa=ifelse(q67_organizacion_cooperativa==1,1,0),
+    q67_organizacion_religiosa=ifelse(q67_organizacion_religiosa==1,1,0),
+    q67_organizacion_otra=ifelse(q67_organizacion_otra==1,1,0)) %>% 
+  group_by(niveled_agrup) %>%  #Agrupo por nivel educativo
+  # Calcular el total ponderado de la población
+  summarise(
+    Poblacion = round(sum(weightvec, na.rm = TRUE), 0),
+    migrantes=round(sum(weightvec*q67_organizacion_migrantes, na.rm = TRUE),0),
+    social=round(sum(weightvec*q67_organizacion_social, na.rm = TRUE),0),
+    movimiento_social=round(sum(weightvec*q67_organizacion_movimiento_social, na.rm = TRUE),0),
+    partido=round(sum(weightvec*q67_organizacion_partido, na.rm = TRUE),0),
+    cooperativa=round(sum(weightvec*q67_organizacion_cooperativa, na.rm = TRUE),0),
+    religiosa=round(sum(weightvec*q67_organizacion_religiosa, na.rm = TRUE),0),
+    otra=round(sum(weightvec*q67_organizacion_otra, na.rm = TRUE),0)) %>% 
+  # Calcular los porcentajes de tipo de organización sobre el total de la población que participa de organizaciones
+  mutate(
+    'Organización de migrantes'= round(migrantes / Poblacion * 100, 1),
+    'Organización social, barrial o comunitaria' = round(social / Poblacion * 100, 1),
+    'Movimiento social' = round(movimiento_social / Poblacion * 100, 1),
+    'Partido político'= round(partido/ Poblacion * 100, 1),
+    'Cooperativa de trabajo o sindicato'= round(cooperativa / Poblacion * 100, 1),
+    'Iglesia o comunidad religiosa' = round(religiosa/ Poblacion * 100, 1),
+    'Otra' = round(otra/ Poblacion * 100, 1)) %>% 
+  select("Nivel educativo"=1, 10:16) %>%   # Mantiene solo los porcentajes 
+  pivot_longer(cols = -"Nivel educativo", names_to = "Tipo de organización", values_to = "Porcentaje") %>%  
+  pivot_wider(names_from = "Nivel educativo", values_from = Porcentaje)  # Transpone la tabla
+
+
+# Imprimir la tabla
+knitr::kable(grafico_8.5) %>%
+  kable_minimal()
+
+
+```
+
+## Gráfico 8.6: Participación en elecciones de autoridades provinciales y/o locales en la Argentina
+
+```{r graf_8.6, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q68_participacion_elecciones_locales = na_if(q68_participacion_elecciones_locales, ""))
+
+
+# Gráfico 8.6
+grafico_8.6 <- enma1 %>%
+  filter(!is.na(q68_participacion_elecciones_locales) & q68_participacion_elecciones_locales!="Prefiero no responder") %>%  #Filtra datos
+  group_by(q68_participacion_elecciones_locales) %>%   # Agrupar por participación en elecciones locales
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  #Calcula distribución
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% #Calcula porcentaje
+  arrange(desc(Porcentaje)) %>%  # Ordenar de mayor a menor 
+  rename("Participación elecciones"=q68_participacion_elecciones_locales) #renombra variable
+
+# Imprimir la tabla
+knitr::kable(grafico_8.6) %>%
+  kable_minimal()
+```
+
+## Gráfico 8.7: Votación en elecciones locales según pertenencia a organizaciones (en porcentajes)
+
+```{r graf_8.7, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q68_participacion_elecciones_locales = na_if(q68_participacion_elecciones_locales, "")) %>% 
+  mutate(q66_participacion_organizacion = na_if(q66_participacion_organizacion, ""))
+
+#Gráfico 8.7
+grafico_8.7 <- enma1 %>%
+  filter(
+    !is.na(q66_participacion_organizacion) & q66_participacion_organizacion != "Prefiero no responder",
+    !is.na(q68_participacion_elecciones_locales) & q68_participacion_elecciones_locales != "Prefiero no responder"
+  ) %>%  # Filtra datos
+  group_by(q68_participacion_elecciones_locales, q66_participacion_organizacion) %>%  # Agrupa según participación en elecciones locales y en organizaciones
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  # Suma ponderada
+  group_by(q66_participacion_organizacion) %>%  # Agrupa por participación en organización
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%  # Calcula porcentaje
+  select(-Cantidad) %>%  # Elimina la columna de valores absolutos
+  pivot_wider(names_from = q68_participacion_elecciones_locales, values_from = Porcentaje, values_fill = 0) %>% # Convierte en tabla de doble entrada
+  rename("Participación organizaciones"=1) #renombra variable
+
+
+# Imprimir la tabla
+knitr::kable(grafico_8.7) %>%
+  kable_minimal()
+```
+
+## Gráfico 8.8: Votación en elecciones locales según tiempo de residencia (en porcentaje)
+
+```{r graf_8.8, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q68_participacion_elecciones_locales = na_if(q68_participacion_elecciones_locales, "")) %>% 
+  mutate(tiempo_residencia_agrup = na_if(tiempo_residencia_agrup, ""))
+
+#Gráfico 8.8
+grafico_8.8 <- enma1 %>%
+  filter(!is.na(q68_participacion_elecciones_locales) & q68_participacion_elecciones_locales!="Prefiero no responder" & !is.na(tiempo_residencia_agrup)) %>%  # Filtra datos
+  group_by(tiempo_residencia_agrup, q68_participacion_elecciones_locales) %>%  # Agrupa por tiempo de residencia y participación en elecciones
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  # Suma ponderada
+  group_by(tiempo_residencia_agrup) %>%  # Agrupa solo por tiempo de residencia
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%  # Calcula % dentro de cada grupo
+  filter(q68_participacion_elecciones_locales == "Si") %>%  # Se queda solo con esta categoría
+  select("Tiempo de residencia"=tiempo_residencia_agrup, Porcentaje) %>%  
+  arrange(desc(Porcentaje))  # Ordena de mayor a menor
+
+
+# Imprimir la tabla
+knitr::kable(grafico_8.8) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 8.9: Votación en elecciones locales según nacionalidad de origen agrupada (en porcentaje)
+
+```{r graf_8.9, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q68_participacion_elecciones_locales = na_if(q68_participacion_elecciones_locales, ""))
+
+#Gráfico 8.9
+grafico_8.9 <- enma1 %>%
+  filter(!is.na(q68_participacion_elecciones_locales) & q68_participacion_elecciones_locales!="Prefiero no responder" & !is.na(nacionalidad_agrup) & nacionalidad_agrup!="APÁTRIDA") %>%  # Filtra datos
+  group_by(nacionalidad_agrup, q68_participacion_elecciones_locales) %>%  # Agrupa por región de origen y participación en elecciones locales
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  # Suma ponderada
+  group_by(nacionalidad_agrup) %>%  # Agrupa solo por región de origen
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%  # Calcula % dentro de cada región de origen
+  filter(q68_participacion_elecciones_locales == "Si") %>%  # Se queda solo con esta categoría
+  select("Región de origen"=nacionalidad_agrup, Porcentaje) %>%  
+  arrange(desc(Porcentaje))  # Ordena de mayor a menor 
+
+
+# Imprimir la tabla
+knitr::kable(grafico_8.9) %>%
+  kable_minimal()
+
+```
+
+
+## Gráfico 8.10: Motivos por los cuales las personas no han votado en elecciones locales (en porcentaje)
+
+```{r graf_8.10, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q69_participacion_no_ = na_if(q69_participacion_no_, ""))
+
+# Gráfico 8.10
+grafico_8.10 <- enma1 %>%
+  filter(!is.na(q69_participacion_no_)) %>%  # Filtra valores no deseados
+# Convertir variables en binarias
+  mutate(
+    requisitos=ifelse(q69_participacion_no_antiguedad==1 | q69_participacion_no_dni==1 | q69_participacion_no_padron==1,1,0),
+    desinformacion=ifelse(q69_participacion_no_sabia==1 | q69_participacion_no_desconocimiento==1,1,0),
+    desinteres=ifelse(q69_participacion_no_interes==1,1,0),
+    obstaculos=ifelse(q69_participacion_no_lejania==1 | q69_participacion_no_permiso==1,1,0)) %>% 
+  # Calcular el total ponderado de la población
+  summarise(
+    Poblacion = round(sum(weightvec, na.rm = TRUE), 0),
+    requisitos=round(sum(weightvec*requisitos, na.rm = TRUE),0),
+    desinformacion=round(sum(weightvec*desinformacion, na.rm = TRUE),0),
+    desinteres=round(sum(weightvec*desinteres, na.rm = TRUE),0),
+    obstaculos=round(sum(weightvec*obstaculos, na.rm = TRUE),0)) %>% 
+  # Calcular los porcentajes sobre el total de la población que no participó de las elecciones
+  mutate(
+    'No cumple los requisitos'= round(requisitos / Poblacion * 100, 1),
+    'Desinformación' = round(desinformacion / Poblacion * 100, 1),
+    'Desinterés' = round(desinteres / Poblacion * 100, 1),
+    'Obstáculos materiales'= round(obstaculos/ Poblacion * 100, 1)) %>% 
+  select(6:9) %>%   # Mantiene solo los porcentajes 
+  # Transformar a formato largo
+  pivot_longer(cols = everything(), names_to = "Motivos no votan", values_to = "Porcentaje")
+
+# Imprimir la tabla
+knitr::kable(grafico_8.10) %>%
+  kable_minimal()
+
+```
+
+
+## Gráfico 8.11: Participación en elecciones del país de origen
+
+```{r graf_8.11, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q70_paricipacion_elecciones_extranjero = na_if(q70_paricipacion_elecciones_extranjero, ""))
+
+
+# Gráfico 8.11
+grafico_8.11 <- enma1 %>%
+  mutate(q70_paricipacion_elecciones_extranjero = case_when(
+    q70_paricipacion_elecciones_extranjero %in% c("Sí, siempre", "Sí, dos o más veces", "Sí, solo una vez") ~ "Sí, al menos alguna vez",
+    q70_paricipacion_elecciones_extranjero == "No" ~ "No",
+    TRUE ~ NA_character_)) %>%  # Recodifica la variable particiación elecciones
+  filter(!is.na(q70_paricipacion_elecciones_extranjero)) %>%  #Filtra datos
+  group_by(q70_paricipacion_elecciones_extranjero) %>%   # Agrupar según participación en elecciones en el extranjero
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  #Calcula distribución
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% #Calcula porcentaje
+  arrange(desc(Porcentaje)) %>%  # Ordenar de mayor a menor
+  rename("Participación elecciones país de origen"=q70_paricipacion_elecciones_extranjero) #renombra variable
+
+# Imprimir la tabla
+knitr::kable(grafico_8.11) %>%
+  kable_minimal()
+
+
+```
+
+## Gráfico 8.12: Participación en elecciones del país de origen según nivel educativo (en porcentajes)
+
+```{r graf_8.12, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q70_paricipacion_elecciones_extranjero = na_if(q70_paricipacion_elecciones_extranjero, "")) %>% 
+  mutate(niveled_agrup = na_if(niveled_agrup, ""))
+
+
+#Gráfico 8.12
+grafico_8.12 <- enma1 %>%
+  mutate(q70_paricipacion_elecciones_extranjero = case_when(
+    q70_paricipacion_elecciones_extranjero %in% c("Sí, siempre", "Sí, dos o más veces", "Sí, solo una vez") ~ "Sí, al menos alguna vez",
+    q70_paricipacion_elecciones_extranjero == "No" ~ "No",
+    TRUE ~ NA_character_)) %>%  # Recodifica la variable particiación elecciones
+  filter(!is.na(q70_paricipacion_elecciones_extranjero) & !is.na(niveled_agrup)) %>%  # Filtra datos
+  group_by(niveled_agrup, q70_paricipacion_elecciones_extranjero) %>%  # Agrupa por nivel educativo y participación en elecciones
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  # Suma ponderada
+  group_by(niveled_agrup) %>%  # Agrupa solo por nivel educativo
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%  # Calcula % dentro de cada categoría
+  filter(q70_paricipacion_elecciones_extranjero == "Sí, al menos alguna vez") %>%  # Se queda solo con esta categoría
+  select("Nivel educativo"=niveled_agrup, Porcentaje) %>%  
+  arrange((Porcentaje))  # Ordena de mayor a menor 
+
+
+
+# Imprimir la tabla
+knitr::kable(grafico_8.12) %>%
+  kable_minimal()
+
+```
+
+
+## Gráfico 8.13: Participación en elecciones del país de origen según región de residencia (en porcentaje)
+
+```{r graf_8.13, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q70_paricipacion_elecciones_extranjero = na_if(q70_paricipacion_elecciones_extranjero, ""))
+
+
+#Gráfico 8.13
+grafico_8.13 <- enma1 %>%
+  mutate(q70_paricipacion_elecciones_extranjero = case_when(
+    q70_paricipacion_elecciones_extranjero %in% c("Sí, siempre", "Sí, dos o más veces", "Sí, solo una vez") ~ "Sí, al menos alguna vez",
+    q70_paricipacion_elecciones_extranjero == "No" ~ "No",
+    TRUE ~ NA_character_)) %>%  # Recodifica la variable particiación elecciones
+  filter(!is.na(q70_paricipacion_elecciones_extranjero) & !is.na(region_amba_agrup)) %>%  # Filtra datos
+  group_by(region_amba_agrup, q70_paricipacion_elecciones_extranjero) %>%  # Agrupa por región de residencia y participación en elecciones
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  # Suma ponderada
+  group_by(region_amba_agrup) %>%  # Agrupa solo por región de residencia
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%  # Calcula % dentro de cada región
+  filter(q70_paricipacion_elecciones_extranjero == "Sí, al menos alguna vez") %>%  # Se queda solo con esta categoría
+  select("Región de residencia"=region_amba_agrup, Porcentaje) %>%  
+  arrange(desc(Porcentaje))  # Ordena de mayor a menor 
+
+
+# Imprimir la tabla
+knitr::kable(grafico_8.13) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 8.14: Participación en elecciones del país de origen según región de residencia (en porcentaje)
+
+```{r graf_8.14, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Creación de un vector con las nacionalidades seleccionadas
+nacionalidades <- c("Brasil", "Paraguay", "Chile", "Perú", "Venezuela", "Uruguay", "Bolivia", 
+                    "Colombia", "España", "Italia")
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q70_paricipacion_elecciones_extranjero = na_if(q70_paricipacion_elecciones_extranjero, ""))
+
+
+#Gráfico 8.14
+grafico_8.14 <- enma1 %>%
+  mutate(q70_paricipacion_elecciones_extranjero = case_when(
+    q70_paricipacion_elecciones_extranjero %in% c("Sí, siempre", "Sí, dos o más veces", "Sí, solo una vez") ~ "Sí, al menos alguna vez",
+    q70_paricipacion_elecciones_extranjero == "No" ~ "No",
+    TRUE ~ NA_character_)) %>%  # Recodifica la variable particiación elecciones 
+  filter(!is.na(q70_paricipacion_elecciones_extranjero) & q3_pais_nacimiento %in% nacionalidades ) %>%  # Filtra datos
+  group_by(q3_pais_nacimiento, q70_paricipacion_elecciones_extranjero) %>%  # Agrupa por nacionalidad y participación en elecciones
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  # Suma ponderada
+  group_by(q3_pais_nacimiento) %>%  # Agrupa solo por nacionalidad
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>%  # Calcula % dentro de cada nacionalidad
+  filter(q70_paricipacion_elecciones_extranjero == "Sí, al menos alguna vez") %>%  # Se queda solo con esta categoría
+  select("Nacionalidad"=q3_pais_nacimiento, Porcentaje) %>%  
+  arrange(desc(Porcentaje))  # Ordena de mayor a menor
+
+
+# Imprimir la tabla
+knitr::kable(grafico_8.14) %>%
+  kable_minimal()
+
+```
+
+## Gráfico 8.15: Motivos aducidos de la falta de participación en elecciones del país de origen (en porcentaje)
+
+```{r graf_8.15, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Convertir campos vacíos de la variable en NA
+enma1 <- enma %>%
+  mutate(q71_participacion_no_motivo= na_if(q71_participacion_no_motivo, ""))
+
+# Gráfico 8.15
+grafico_8.15 <- enma1 %>%
+  filter(!is.na(q71_participacion_no_motivo)) %>%  #Filtra datos
+  group_by(q71_participacion_no_motivo) %>%   # Agrupar por motivo de no participación en elecciones
+  summarise(Cantidad = round(sum(weightvec, na.rm = TRUE), 0), .groups = "drop") %>%  #Calcula distribución
+  mutate(Porcentaje = round(Cantidad / sum(Cantidad) * 100, 1)) %>% #Calcula porcentaje
+  arrange(desc(Porcentaje)) %>%  # Ordenar de mayor a menor 
+  rename("Motivos no participación"=q71_participacion_no_motivo) #renombra variable
+
+# Imprimir la tabla
+knitr::kable(grafico_8.15) %>%
+  kable_minimal()
+
+```
