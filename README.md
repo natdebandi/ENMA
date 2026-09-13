@@ -1,36 +1,38 @@
 # ENMA_2023
 
-Encuesta Nacional Migrante de Argentina 2023
+Encuesta Nacional Migrante de Argentina, edición 2023.
 
-Este repositorio contiene el procesamiento de los datos de la ENMA 2023 en R correspondientes al
+El repositorio contiene el procesamiento en R de los datos de la ENMA 2023 que sirvió de base al
 Anuario Migratorio Argentino 2024
 (https://www.encuestamigrante.ar/wp-content/uploads/documentos/anuario_enma_2023_vf.pdf)
 
 ## Contenido
 
-- `Cap1_v2.Rmd` a `Cap8_v2.Rmd` — los capítulos del Anuario, con su `html` renderizado.
-- `scripts/anonimizar_enma.py` — genera la versión anonimizada para publicación.
-- `scripts/medir_reidentificacion.py` — mide el riesgo de reidentificación por escenario de claves.
-- `informe/INFORME_enma2023.md` — criterio de anonimización y decisiones pendientes.
+- `Cap1_v2.Rmd` a `Cap8_v2.Rmd`: los capítulos del Anuario, cada uno con su versión html.
+- `scripts/anonimizar_enma.py`: genera la versión anonimizada de la base.
+- `scripts/medir_reidentificacion.py`: mide el riesgo de reidentificación por combinación de variables.
+- `informe/INFORME_enma2023.md`: documenta el tratamiento aplicado y las decisiones adoptadas.
+- `deposito/`: documentación que acompaña a la base publicada.
 
-## Datos
+## Los datos
 
-Los microdatos **no** están en este repositorio y no deben estar. La ENMA no se distribuye como
-descarga abierta: se solicita por formulario desde https://www.encuestamigrante.ar/ y su uso se
-enmarca en la Ley de Protección de Datos Personales (N.º 25.326) y en los lineamientos del Comité
-de Ética de CONICET.
+Los microdatos de la ENMA se solicitan a la fuente mediante formulario, en
+https://www.encuestamigrante.ar/ . El archivo original no forma parte de este repositorio; su
+reproducción requiere disponer de él en `data/`, ruta que el `.gitignore` mantiene fuera del control
+de versiones.
 
-Para reproducir los capítulos hay que solicitar los microdatos a la fuente y colocarlos en
-`data/ENMA2023_final_public.csv`. El `.gitignore` bloquea `data/` de modo que no entren por
-descuido.
+La base que se publica es una versión anonimizada, de 4.679 registros y 228 variables, generada
+desde el original con `scripts/anonimizar_enma.py`. Está disponible como adjunto de la versión
+`datos-v1` en https://github.com/natdebandi/ENMA_2023/releases y el detalle del tratamiento consta
+en `informe/INFORME_enma2023.md`.
 
-La versión anonimizada que se publica se genera desde ese original:
+La encuesta es una iniciativa del CONICET y de organizaciones de migrantes y de derechos humanos.
+El uso de los datos se enmarca en la Ley de Protección de Datos Personales (N.º 25.326) y en los
+lineamientos del Comité de Ética de CONICET.
 
-```
-python3 scripts/anonimizar_enma.py
-```
+## Cómo citar
 
-## Origen
+Base anonimizada, versión 1:
+https://github.com/natdebandi/ENMA_2023/releases/tag/datos-v1
 
-La encuesta es una iniciativa del CONICET y organizaciones de migrantes y de derechos humanos.
-Más información en https://www.encuestamigrante.ar/
+Sitio de la encuesta: https://www.encuestamigrante.ar/

@@ -1,63 +1,60 @@
-# Cómo subir la base a Zenodo
+# Depósito de la base en Zenodo
 
-Guía para el depósito de la base anonimizada de la ENMA 2023. Son unos diez minutos.
-El paquete ya está armado y verificado en `~/investigacion/Workspace_R/ENMA_publico/deposito/`.
+Nota de procedimiento para el depósito de la base anonimizada de la ENMA 2023. El paquete se
+encuentra armado y verificado en `~/investigacion/Workspace_R/ENMA_publico/deposito/`.
 
-## Antes de empezar
+## Consideración previa
 
-Hay una decisión que conviene tomar con el equipo de la ENMA antes de publicar, aunque sea en
-borrador. Zenodo permite crear el depósito sin publicarlo, así que se puede avanzar y dejar la
-consulta para después. La pregunta concreta es si el colectivo de la encuesta está de acuerdo con que
-una versión anonimizada se distribuya fuera del formulario de solicitud. Los lineamientos que la
-propia página menciona, el Comité de Ética de CONICET y la Ley 25.326, apuntan a que la decisión es
-de la fuente, no de quien procesa los datos.
+La conveniencia de consultar al equipo de la ENMA antes de publicar el depósito, incluso en carácter
+de borrador, se apoya en que la encuesta es una iniciativa colectiva. Zenodo permite crear el
+depósito sin publicarlo, de modo que la consulta puede tramitarse en paralelo. La pregunta refiere a
+si el colectivo acuerda que una versión anonimizada circule fuera del formulario de solicitud.
 
-## Paso a paso
+## Procedimiento
 
-1. Entrar a https://zenodo.org y crear cuenta o iniciar sesión. Conviene usar la cuenta
-   institucional si la hay, porque Zenodo asocia el depósito a la afiliación.
+1. Ingresar a https://zenodo.org e iniciar sesión. La cuenta institucional presenta la ventaja de
+   que Zenodo asocia el depósito a la afiliación declarada.
 
-2. Ir a https://zenodo.org/uploads/new y elegir **New upload**.
+2. Ir a https://zenodo.org/uploads/new y seleccionar la opción de nueva carga.
 
-3. Arrastrar el archivo `deposito/ENMA2023_anonima_v2.zip`. Es el que conviene subir y no el CSV
-   suelto, porque el zip ya trae adentro el CSV, el README del dataset y la licencia.
+3. Cargar el archivo `deposito/ENMA2023_anonima_v2.zip`, que reúne el archivo de datos, la nota del
+   conjunto y la licencia.
 
-4. Completar los metadatos. Lo mínimo que Zenodo pide:
+4. Completar los metadatos. El servicio solicita, como mínimo:
 
-   - **Resource type**: Dataset.
-   - **Title**: `ENMA 2023 — Base anonimizada (Encuesta Nacional Migrante de Argentina)`.
-   - **Creators**: agregar las autoras y autores. Acá hace falta el ORCID de cada uno; Zenodo lo
-     busca por nombre. La autoría de la base es de quien la produjo, pero corresponde mencionar en
-     la descripción que la encuesta es del colectivo ENMA.
-   - **Description**: pegar el contenido de `deposito/README_dataset.md`. Es Markdown y Zenodo lo
-     respeta si se marca el formato.
-   - **License**: Creative Commons Attribution 4.0 International.
-   - **Keywords**: migración, Argentina, ENMA, microdatos, anonimización.
-   - **Language**: Spanish.
+   - Tipo de recurso: conjunto de datos.
+   - Título: `ENMA 2023 — Base anonimizada (Encuesta Nacional Migrante de Argentina)`.
+   - Autores: cada uno con su identificador ORCID, que Zenodo busca por nombre. La descripción
+     señala que la encuesta corresponde al colectivo ENMA.
+   - Descripción: el contenido de `deposito/README_dataset.md`, en formato Markdown.
+   - Licencia: Creative Commons Attribution 4.0 International.
+   - Palabras clave: migración, Argentina, ENMA, microdatos, anonimización.
+   - Idioma: español.
 
-5. Guardar. El depósito queda en **borrador** y todavía se puede editar. Revisar la vista previa y
-   recién ahí apretar **Publish**.
+5. Guardar. El depósito queda en estado de borrador y admite edición. La publicación se concreta
+   con la opción correspondiente.
 
-6. Al publicar, Zenodo asigna un **DOI**. Copiarlo y avisarme: hay que agregarlo al README del
-   repositorio de GitHub para que el código apunte a los datos, y para que quede en el informe.
+6. Al publicar, Zenodo asigna un identificador persistente (DOI). Ese identificador se incorpora al
+   README del repositorio y a este informe.
 
-## Lo que no conviene hacer
+## Sobre los archivos
 
-No subir el CSV de microdatos original, el `ENMA2023_final_public.csv`. Ese archivo tiene provincia,
-localidad y barrio, y es el que produce el 95,3 % de reidentificación.
+El archivo original `ENMA2023_final_public.csv` conserva provincia, localidad y barrio, y es el que
+produce el 95,3 % de reidentificación, de modo que queda fuera del depósito.
 
-No usar la opción de acceso restringido para esta versión. Si más adelante se quiere una versión con
-condiciones, eso es otro depósito.
+La opción de acceso restringido corresponde a otra modalidad de publicación. Si en el futuro se
+considera una versión con condiciones de acceso, se tramita como depósito independiente.
 
-## Verificación previa ya hecha
+## Verificación
 
-El paquete se generó y se controló desde acá:
+El paquete se generó y controló en el directorio del proyecto:
 
 ```
-sha256  7.9M  ENMA2023_anonima_v2.csv   a17216b1e33f93d63183db580187db40...
-sha256  631K  ENMA2023_anonima_v2.zip   e0ed23733adfd0313c3f473dbe4b8c51...
+sha256  ENMA2023_anonima_v2.csv
+sha256  ENMA2023_anonima_v2.zip
 ```
 
-El script que genera el CSV es reproducible y está en el repositorio. La base tiene 4.679 registros y
-228 variables. Se eliminaron los identificadores directos, la geografía fina, la ocupación en texto
-libre y doce columnas de testimonio detectadas por regla.
+Ambos resúmenes criptográficos constan en `SHA256SUMS.txt`. El script productor es reproducible y
+consta en el repositorio. La base reúne 4.679 registros y 228 variables, sin identificadores
+directos, geografía fina, ocupación en texto libre ni las doce columnas de respuesta libre
+detectadas por regla.

@@ -1,20 +1,20 @@
-ENMA 2023 - Base anonimizada
+# ENMA 2023 - Base anonimizada
+
+## Licencia
+
 Copyright (c) 2026 Natalia Debandi
 
-Esta base se distribuye bajo la licencia Creative Commons
-Atribución 4.0 Internacional (CC BY 4.0).
+La base se distribuye bajo la licencia Creative Commons Atribución 4.0 Internacional (CC BY 4.0).
 
-Usted es libre de compartir y adaptar el material para cualquier
-propósito, incluso comercial, siempre que otorgue el crédito
-correspondiente, proporcione un enlace a la licencia e indique si se
-realizaron cambios.
-
-Texto completo de la licencia:
+El texto completo consta en:
 https://creativecommons.org/licenses/by/4.0/legalcode.es
-Resumen en castellano:
+
+El resumen en castellano consta en:
 https://creativecommons.org/licenses/by/4.0/deed.es
 
-ADVERTENCIA: esta base no es una liberación oficial de la ENMA. Fue
-tratada a partir de datos obtenidos por el formulario de solicitud de la
-fuente. Su uso debe respetar los lineamientos del Comité de Ética de
-CONICET y la Ley de Protección de Datos Personales (N.º 25.326).
+## Alcance
+
+La base no constituye una liberación oficial de la ENMA. Fue tratada a partir de datos obtenidos
+mediante el formulario de solicitud de la fuente. Su uso se enmarca en los lineamientos del Comité
+de Ética de CONICET y en la Ley de Protección de Datos Personales (N.º 25.326), que son el marco
+declarado por la encuesta para la circulación de sus datos.
