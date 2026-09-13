@@ -1,7 +1,6 @@
 # ENMA 2023
 
-Base de datos de acceso abierto y procesamiento de la segunda edición de la Encuesta Nacional
-Migrante de Argentina, levantada en 2023.
+La ENMA es una iniciativa de producción de datos primarios que busca relevar las condiciones de vida en las que se encuentran las personas migrantes, solicitantes de asilo y refugiadas que viven en la República Argentina, así como su nivel de acceso a derechos en todos los órdenes sociales.
 
 La ENMA releva las condiciones de vida, las trayectorias y el acceso efectivo a derechos de las
 personas migrantes, solicitantes de asilo y refugiadas residentes en el país. Se desarrolla desde la
