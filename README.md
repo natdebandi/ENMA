@@ -25,7 +25,7 @@ general, trayectoria y proyecto migratorio, situación documentaria, hogar y fam
 hijos e hijas, salud, vivienda, trayectoria educativa, situación socioeconómica, discriminación y
 violencia, y participación social y política.
 
-**Antes de trabajar con los datos conviene leer [`deposito/README_dataset.md`](deposito/README_dataset.md).**
+**Antes de trabajar con los datos conviene leer [`documentacion/BASE_enma2023.md`](documentacion/BASE_enma2023.md).**
 Documenta la composición de la muestra, la organización de las variables, el despliegue de las
 preguntas de selección múltiple, las dos formas de valor ausente y, en particular, la diferencia
 entre los dos ponderadores, que no son intercambiables.
@@ -35,13 +35,16 @@ entre los dos ponderadores, que no son intercambiables.
 - `Cap1_v2.Rmd` a `Cap8_v2.Rmd`, los capítulos del Anuario en R Markdown con su versión html. El
   orden es perfil sociodemográfico, situación documentaria, educación, salud, trabajo, vivienda,
   discriminación y participación. Sirven de punto de partida para otras explotaciones de la base.
-- `deposito/`, la documentación que acompaña a la base publicada, la licencia de los datos y el
-  listado de verificación de integridad.
-- `informe/INFORME_enma2023.md`, el tratamiento aplicado a la base, la medición del riesgo de
-  reidentificación y las decisiones de publicación.
-- `informe/NOTAS_documento_metodologico.md`, las precisiones del documento metodológico de la
-  edición que condicionan el uso de la base, entre ellas el criterio de cada ponderador y los
-  límites de la representatividad.
+- `documentacion/BASE_enma2023.md`, la descripción de la base publicada y las advertencias que
+  condicionan su uso.
+- `documentacion/Documento_metodologico_ENMA_2023.pdf`, el diseño muestral, el trabajo de campo y la
+  construcción de los ponderadores, en el documento de la fuente.
+- `documentacion/Cuestionario_ENMA_2023.pdf`, el instrumento completo, con la redacción y el orden
+  de las preguntas que dan origen a cada variable.
+- `documentacion/INFORME_tratamiento_base.md`, el tratamiento aplicado a la base, la medición del
+  riesgo de reidentificación y las decisiones de publicación.
+- `documentacion/SHA256SUMS.txt`, la verificación de integridad de los archivos del release.
+- `LICENSE-datos.txt`, la licencia de los datos.
 
 Los capítulos leen el archivo desde `data/`, ruta que el control de versiones no incluye. Su
 ejecución requiere descargar la base y ubicarla allí.
@@ -63,7 +66,7 @@ Investigaciones con Seres Humanos (Res. Ministerio de Salud 1480/2011) y en la L
 Datos Personales (N.º 25.326).
 
 Los datos se distribuyen bajo licencia Creative Commons Atribución 4.0 Internacional, cuyo texto
-consta en `deposito/LICENSE_datos_CC-BY-4.0.txt`.
+consta en `LICENSE-datos.txt`.
 
 ## Autoría
 
@@ -71,7 +74,8 @@ Natalia Debandi. Centro de Inteligencia Artificial Interdisciplinario (CIAI), Un
 de San Martín y CONICET, Argentina. ORCID https://orcid.org/0000-0002-2619-6270
 
 La autoría corresponde a la preparación de la base publicada y al procesamiento que contiene el
-repositorio. La encuesta es obra colectiva de la ENMA.
+repositorio. La encuesta es obra colectiva de la ENMA, así como el documento metodológico y el
+cuestionario que se reproducen en `documentacion/`.
 
 ## Cómo citar
 

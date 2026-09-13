@@ -18,7 +18,10 @@ El universo son las personas nacidas en un país distinto de la Argentina, mayor
 residentes en el país. El diseño muestral emplea un enfoque de cuotas y la muestra fue calibrada por
 nacionalidad, género, edad, región de residencia y nivel educativo. El detalle del diseño, del
 trabajo de campo y de la construcción de los ponderadores consta en el documento metodológico de la
-edición, disponible en https://www.encuestamigrante.ar/
+edición, que acompaña a esta documentación en `Documento_metodologico_ENMA_2023.pdf`. El instrumento
+completo, con la redacción y el orden de las preguntas, consta en `Cuestionario_ENMA_2023.pdf`. Ambos
+son documentos de la ENMA y se reproducen aquí para que la base pueda leerse sin salir del
+repositorio.
 
 ## Qué contiene
 
@@ -212,5 +215,5 @@ Cita de esta versión de la base:
 
 La cita de esta versión no reemplaza la de la encuesta como fuente primaria.
 
-Licencia: Creative Commons Atribución 4.0 Internacional, cuyo texto consta en
-`LICENSE_datos_CC-BY-4.0.txt`. La integridad de la descarga se verifica contra `SHA256SUMS.txt`.
+Licencia: Creative Commons Atribución 4.0 Internacional, cuyo texto consta en `LICENSE-datos.txt`,
+en la raíz del repositorio. La integridad de la descarga se verifica contra `SHA256SUMS.txt`.

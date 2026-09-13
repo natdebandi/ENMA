@@ -6,9 +6,10 @@ data/
 *.xls
 *.xlsx
 
-# Paquete de publicacion: el zip y el csv llevan la base, no se versionan.
-# La licencia y el README del deposito son texto y si van al repo.
+# Paquete del release: el zip y el csv llevan la base, no se versionan.
+# La documentacion, la licencia y los pdf de la fuente son texto y si van al repo.
 *.zip
+paquete_release/
 
 # Utilitarios de preparacion de la base: quedan en local, no se publican.
 # El repositorio contiene el material final, no las herramientas que lo produjeron.

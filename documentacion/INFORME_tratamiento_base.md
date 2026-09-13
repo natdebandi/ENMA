@@ -110,8 +110,8 @@ local.
 El depósito en Zenodo no se concretó porque el servicio se encontraba fuera de línea en la fecha de
 trabajo, con respuesta nula en `zenodo.org`. Se verificaron alternativas activas, entre ellas OSF,
 HuggingFace y Dataverse, todas accesibles. La publicación mediante la versión de GitHub resuelve la
-accesibilidad inmediata, aunque no provee identificador persistente. La guía para concretar el
-depósito, con los metadatos y el procedimiento, consta en `deposito/COMO_SUBIR_A_ZENODO.md`.
+accesibilidad inmediata, aunque no provee identificador persistente. El depósito con identificador
+queda como tarea pendiente.
 
 ## 6. La decisión de abrir la base
 
@@ -135,12 +135,12 @@ README del repositorio.
 
 ## 7. Precisiones incorporadas del documento metodológico
 
-La lectura del `Documento metodológico ENMA 2023.pdf`, de julio de 2024, corrigió varios puntos de
-la documentación. El registro completo, con la verificación de cada uno contra el archivo de datos,
-consta en `informe/NOTAS_documento_metodologico.md`. Los de mayor consecuencia son el criterio de
-uso de cada ponderador, que no son intercambiables, la desalineación entre la definición documentada
-de `migracion_reciente` y su contenido efectivo, y los límites de la representatividad por provincia
-y por edades simples.
+La lectura del documento metodológico de la edición, de julio de 2024, corrigió varios puntos de la
+documentación, cada uno verificado contra el archivo de datos. Los de mayor consecuencia son el
+criterio de uso de cada ponderador, que no son intercambiables, la desalineación entre la definición
+documentada de `migracion_reciente` y su contenido efectivo, y los límites de la representatividad
+por provincia y por edades simples. Las advertencias que se desprenden de ellos constan en
+`documentacion/BASE_enma2023.md`, y el documento de la fuente se incluye en `documentacion/`.
 
 ## 8. Puntos abiertos
 
