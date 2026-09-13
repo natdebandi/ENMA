@@ -93,23 +93,21 @@ Los cuestionarios difieren en secciones, preguntas y opciones. El documento señ
 estadístico de la ENMA está trabajando en la integración. Corresponde advertirlo, porque la
 comparación entre ediciones es el uso más previsible de la base.
 
-## 7. La fuente pide no redistribuir los datos
-
-Es el punto que excede a la documentación y toca la decisión de publicar.
+## 7. El registro de solicitud y la decisión de abrir la base
 
 El documento afirma que los datos de la ENMA son abiertos, pero que para acceder se solicita siempre
 completar el registro de solicitud, de modo de poder hacer un seguimiento del uso que se les da.
 Agrega de manera explícita que se solicita no transferir los datos a otras personas de manera directa
 sino indicarle a la persona que realice su propia solicitud.
 
-Publicar la base como descarga abierta, incluso anonimizada y con otro nombre de archivo, hace
-exactamente lo que la fuente pide no hacer, y desactiva el seguimiento de uso que la ENMA declara
-como razón del registro. La anonimización responde al riesgo de reidentificación, que era el problema
-técnico, pero no al pedido de la fuente, que es un problema de acuerdo colectivo.
+Una descarga abierta desactiva ese seguimiento, de modo que el punto se planteó antes de publicar. La
+decisión de abrir la base fue tomada el 2026-09-13 por Natalia Debandi, en su carácter de integrante
+del equipo de la ENMA, y consta con sus razones en la sección 6 del informe técnico.
 
-La medición de riesgo y esta versión anonimizada son un buen insumo para plantearlo al equipo de la
-ENMA. La decisión sobre la publicación conviene que salga de esa conversación y no de este
-repositorio.
+La decisión distingue dos objetos y eso resuelve la tensión. La versión anonimizada, sin geografía
+fina ni campos de texto libre, se publica de manera abierta. Los microdatos completos permanecen
+disponibles únicamente mediante el formulario de la fuente, y así lo dicen tanto el README del
+repositorio como la documentación de la base.
 
 ## 8. La publicación del código sí está prevista por la fuente
 

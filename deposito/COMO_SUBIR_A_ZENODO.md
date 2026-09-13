@@ -3,12 +3,13 @@
 Nota de procedimiento para el depósito de la base anonimizada de la ENMA 2023. El paquete se
 encuentra armado y verificado en `~/investigacion/Workspace_R/ENMA_publico/deposito/`.
 
-## Consideración previa
+## Estado
 
-La conveniencia de consultar al equipo de la ENMA antes de publicar el depósito, incluso en carácter
-de borrador, se apoya en que la encuesta es una iniciativa colectiva. Zenodo permite crear el
-depósito sin publicarlo, de modo que la consulta puede tramitarse en paralelo. La pregunta refiere a
-si el colectivo acuerda que una versión anonimizada circule fuera del formulario de solicitud.
+La apertura de la base quedó resuelta el 2026-09-13 y la versión anonimizada se publicó como release
+del repositorio, en https://github.com/natdebandi/ENMA_2023/releases/tag/datos-v1 . El depósito en
+Zenodo queda pendiente de que el servicio vuelva a estar en línea y su valor es el identificador
+persistente para citación, dado que el release no provee DOI. Una vez concretado, el release funciona
+como espejo.
 
 ## Procedimiento
 

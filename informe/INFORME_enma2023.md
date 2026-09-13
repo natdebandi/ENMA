@@ -113,23 +113,43 @@ HuggingFace y Dataverse, todas accesibles. La publicación mediante la versión 
 accesibilidad inmediata, aunque no provee identificador persistente. La guía para concretar el
 depósito, con los metadatos y el procedimiento, consta en `deposito/COMO_SUBIR_A_ZENODO.md`.
 
-## 6. Consideraciones sobre el destino en la web de la ENMA
+## 6. La decisión de abrir la base
 
-La propuesta de ofrecer la base desde la página de la encuesta sin el formulario de solicitud
-presenta una particularidad. La página ya declara que los datos se publican con fines de
-investigación y encuadra su uso en la Ley 25.326 y en los lineamientos del Comité de Ética de
-CONICET. Ofrecer la base sin solicitud no resulta incompatible con ese marco, pero modifica la
-relación con la fuente, dado que la ENMA es una iniciativa colectiva y no un archivo propio. La
-versión anonimizada y la medición de riesgo constituyen un insumo para esa conversación con el
-equipo de la encuesta.
+La publicación de la base como descarga abierta se resolvió el 2026-09-13. La decisión fue tomada
+por Natalia Debandi, en su carácter de integrante del equipo de la ENMA, sobre tres consideraciones.
+La base circuló durante años mediante el formulario de solicitud, de modo que la apertura no
+anticipa una difusión que la encuesta no hubiera tenido. La edición 2026 se encuentra próxima a
+publicarse, y la apertura de la edición anterior acompaña ese ciclo. Y la ciencia abierta figura
+entre los objetivos declarados de la ENMA, que se propone dar acceso libre a la información
+producida y favorecer su apropiación social por parte de las personas migrantes y sus
+organizaciones.
 
-## 7. Puntos abiertos
+Corresponde registrar el punto que la decisión resuelve. El documento metodológico de la edición
+señala que los datos son abiertos pero que para acceder se solicita completar el registro, de modo
+de poder hacer un seguimiento del uso, y pide no transferirlos de manera directa a otras personas
+sino indicarles que realicen su propia solicitud. Una descarga abierta desactiva ese seguimiento.
+La decisión adoptada distingue por eso dos objetos. La versión anonimizada, sin geografía fina ni
+campos de texto, se publica de manera abierta. Los microdatos completos permanecen disponibles
+únicamente mediante el formulario de la fuente, y así consta en la documentación de la base y en el
+README del repositorio.
+
+## 7. Precisiones incorporadas del documento metodológico
+
+La lectura del `Documento metodológico ENMA 2023.pdf`, de julio de 2024, corrigió varios puntos de
+la documentación. El registro completo, con la verificación de cada uno contra el archivo de datos,
+consta en `informe/NOTAS_documento_metodologico.md`. Los de mayor consecuencia son el criterio de
+uso de cada ponderador, que no son intercambiables, la desalineación entre la definición documentada
+de `migracion_reciente` y su contenido efectivo, y los límites de la representatividad por provincia
+y por edades simples.
+
+## 8. Puntos abiertos
 
 1. La recodificación de la ocupación en grupos, en caso de que el análisis ocupacional desagregado
    resulte central para los capítulos.
 2. El destino del repositorio `research_migration`, cuya división por tema se presenta como la vía
    razonable.
-3. La consulta al equipo de la ENMA sobre la publicación de la base en su sitio.
-4. El depósito en Zenodo con identificador persistente, para el cual resta el registro de autoría y
-   el ORCID correspondiente.
+3. El depósito en Zenodo con identificador persistente, pendiente de que el servicio vuelva a estar
+   en línea. Los metadatos de autoría ya constan en la guía correspondiente.
+4. El aviso al equipo estadístico de la ENMA sobre la desalineación de `migracion_reciente` y sobre
+   la diferencia de cuatro casos en el conteo de Paraguay entre el documento metodológico y la base.
 5. El respaldo remoto del trabajo sin publicar que permanece en `enma2023_git`.
