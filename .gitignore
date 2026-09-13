@@ -6,6 +6,10 @@ data/
 *.xls
 *.xlsx
 
+# Paquete de publicacion: el zip y el csv llevan la base, no se versionan.
+# La licencia y el README del deposito son texto y si van al repo.
+*.zip
+
 # Basura de RStudio
 .Rproj.user
 .Rhistory
