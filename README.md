@@ -1,11 +1,11 @@
 # ENMA 2023
 
-La ENMA es una iniciativa de producción de datos primarios que busca relevar las condiciones de vida en las que se encuentran las personas migrantes, solicitantes de asilo y refugiadas que viven en la República Argentina, así como su nivel de acceso a derechos en todos los órdenes sociales.
-
-La ENMA releva las condiciones de vida, las trayectorias y el acceso efectivo a derechos de las
-personas migrantes, solicitantes de asilo y refugiadas residentes en el país. Se desarrolla desde la
-Red de Investigaciones en Derechos Humanos del CONICET en conjunto con más de 55 organizaciones de
-migrantes, con un enfoque práctico de derechos humanos, y se realiza cada tres años desde 2020.
+La ENMA es una iniciativa de producción de datos primarios que releva las condiciones de vida en las
+que se encuentran las personas migrantes, solicitantes de asilo y refugiadas que viven en la
+República Argentina, sus trayectorias y su nivel de acceso efectivo a derechos en todos los órdenes
+sociales. Se desarrolla desde la Red de Investigaciones en Derechos Humanos del CONICET en conjunto
+con más de 55 organizaciones de migrantes, con un enfoque práctico de derechos humanos, y se realiza
+cada tres años desde 2020.
 
 Este repositorio reúne dos cosas. La base de datos de la edición 2023, en la versión que se publica
 para su uso abierto, y el procesamiento en R que sirvió de base a los ocho capítulos del Anuario
