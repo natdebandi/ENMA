@@ -181,6 +181,12 @@ resúmenes criptográficos de la versión sustituida: el archivo separado por co
 versión anterior había registrado tres descargas del archivo separado por comas y dos del comprimido,
 de modo que pudo haber circulado fuera del repositorio.
 
+La versión `datos-v1` se retiró el mismo día, con su etiqueta. La copia de lo que estuvo publicado se
+conserva en `~/laboratorio/papelera-2026-09-17/`, con una nota que advierte que la base no debe
+publicarse ni distribuirse, porque es la que conserva la columna retirada. La etiqueta apuntaba a un
+commit que permanece en el historial de la rama principal y su árbol no contenía ningún archivo de
+datos, de modo que su eliminación no retiró nada más que el acceso al adjunto.
+
 ## 9. Puntos abiertos
 
 1. La recodificación de la ocupación en grupos, en caso de que el análisis ocupacional desagregado
