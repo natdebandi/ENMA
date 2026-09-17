@@ -250,11 +250,12 @@ Cita de la fuente:
 
 Cita de esta versión de la base:
 
-> Debandi, Natalia (2026). ENMA 2020. Base de datos, versión 1. Centro de Inteligencia Artificial
-> Interdisciplinario, Universidad Nacional de San Martín y CONICET.
-> https://github.com/natdebandi/ENMA/releases/tag/datos-2020-v1
+> Encuesta Nacional Migrante de Argentina (2026). ENMA 2020. Base de datos, versión 1 [Conjunto de
+> datos]. https://github.com/natdebandi/ENMA/releases/tag/datos-2020-v1
 
-La cita de esta versión no reemplaza la de la encuesta como fuente primaria.
+La cita de esta versión no reemplaza la de la encuesta como fuente primaria. Para los resultados
+publicados en el Anuario Migratorio Argentino corresponde citar el anuario de la edición
+correspondiente.
 
 Licencia: Creative Commons Atribución 4.0 Internacional, cuyo texto consta en `LICENSE-datos.txt`,
 en la raíz del repositorio. La integridad de la descarga se verifica contra

@@ -210,11 +210,12 @@ Cita de la fuente, en el formato que sugiere el documento metodológico:
 
 Cita de esta versión de la base:
 
-> Debandi, Natalia (2026). ENMA 2023. Base de datos, versión 2. Centro de Inteligencia Artificial
-> Interdisciplinario, Universidad Nacional de San Martín y CONICET.
-> https://github.com/natdebandi/ENMA/releases/tag/datos-2023-v2
+> Encuesta Nacional Migrante de Argentina (2026). ENMA 2023. Base de datos, versión 2 [Conjunto de
+> datos]. https://github.com/natdebandi/ENMA/releases/tag/datos-2023-v2
 
-La cita de esta versión no reemplaza la de la encuesta como fuente primaria.
+La cita de esta versión no reemplaza la de la encuesta como fuente primaria. Para los resultados
+publicados en el Anuario Migratorio Argentino corresponde citar el anuario de la edición
+correspondiente.
 
 Licencia: Creative Commons Atribución 4.0 Internacional, cuyo texto consta en `LICENSE-datos.txt`,
 en la raíz del repositorio. La integridad de la descarga se verifica contra

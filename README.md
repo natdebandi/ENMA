@@ -81,12 +81,13 @@ consta en `LICENSE-datos.txt`.
 
 ## Autoría
 
-Natalia Debandi. Centro de Inteligencia Artificial Interdisciplinario (CIAI), Universidad Nacional
-de San Martín y CONICET, Argentina. ORCID https://orcid.org/0000-0002-2619-6270
+Este repositorio forma parte del trabajo colectivo de la Encuesta Nacional Migrante de Argentina,
+que se desarrolla desde la Red de Investigaciones en Derechos Humanos del CONICET en conjunto con las
+organizaciones de migrantes y el conjunto de personas que participaron en sus distintas etapas. La
+encuesta, sus documentos metodológicos y sus cuestionarios son obra de ese colectivo.
 
-La autoría corresponde a la preparación de las bases publicadas y al procesamiento que contiene el
-repositorio. La encuesta es obra colectiva de la ENMA, así como los documentos metodológicos y los
-cuestionarios que se reproducen en `documentacion/`.
+La preparación de las bases que se publican aquí y el procesamiento que contiene el repositorio
+corresponden al mismo trabajo colectivo, y se acreditan a la ENMA como equipo.
 
 ## Cómo citar
 
@@ -100,12 +101,12 @@ Cita de la fuente, en el formato que sugieren los documentos metodológicos:
 
 Cita de la versión publicada de cada base:
 
-> Debandi, Natalia (2026). ENMA 2020. Base de datos, versión 1. Centro de Inteligencia Artificial
-> Interdisciplinario, Universidad Nacional de San Martín y CONICET.
-> https://github.com/natdebandi/ENMA/releases/tag/datos-2020-v1
+> Encuesta Nacional Migrante de Argentina (2026). ENMA 2020. Base de datos, versión 1 [Conjunto de
+> datos]. https://github.com/natdebandi/ENMA/releases/tag/datos-2020-v1
 
-> Debandi, Natalia (2026). ENMA 2023. Base de datos, versión 2. Centro de Inteligencia Artificial
-> Interdisciplinario, Universidad Nacional de San Martín y CONICET.
-> https://github.com/natdebandi/ENMA/releases/tag/datos-2023-v2
+> Encuesta Nacional Migrante de Argentina (2026). ENMA 2023. Base de datos, versión 2 [Conjunto de
+> datos]. https://github.com/natdebandi/ENMA/releases/tag/datos-2023-v2
 
-La cita de cada versión no reemplaza la de la encuesta como fuente primaria.
+La cita de cada versión no reemplaza la de la encuesta como fuente primaria. Para los resultados
+publicados en el Anuario Migratorio Argentino corresponde citar el anuario de la edición
+correspondiente.

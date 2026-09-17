@@ -2,7 +2,7 @@
 
 ## Licencia
 
-Copyright (c) 2026 Natalia Debandi
+Copyright (c) 2026 Encuesta Nacional Migrante de Argentina
 
 Las bases se distribuyen bajo la licencia Creative Commons Atribución 4.0 Internacional (CC BY 4.0).
 

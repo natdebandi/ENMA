@@ -174,7 +174,7 @@ ediciones no puedan divergir.
 ## 8. Puntos abiertos
 
 1. El depósito en Zenodo con identificador persistente, pendiente de que el servicio vuelva a estar
-   en línea y del token y el ORCID de Natalia.
+   en línea y de las credenciales y el identificador de autoría que se definan para el depósito.
 2. La recodificación de la ocupación en grupos, si el análisis ocupacional desagregado resulta
    central. En 2020 la pérdida es menor que en 2023, porque `q44_ocupacion` conserva catorce
    categorías cerradas y solo se retira el campo abierto.

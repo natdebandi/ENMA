@@ -117,7 +117,7 @@ queda como tarea pendiente.
 ## 6. La decisión de abrir la base
 
 La publicación de la base como descarga abierta se resolvió el 2026-09-13. La decisión fue tomada
-por Natalia Debandi, en su carácter de integrante del equipo de la ENMA, sobre tres consideraciones.
+desde el equipo de la ENMA, sobre tres consideraciones.
 La base circuló durante años mediante el formulario de solicitud, de modo que la apertura no
 anticipa una difusión que la encuesta no hubiera tenido. La edición 2026 se encuentra próxima a
 publicarse, y la apertura de la edición anterior acompaña ese ciclo. Y la ciencia abierta figura
@@ -194,7 +194,8 @@ datos, de modo que su eliminación no retiró nada más que el acceso al adjunto
 2. El destino del repositorio `research_migration`, cuya división por tema se presenta como la vía
    razonable.
 3. El depósito en Zenodo con identificador persistente, pendiente de que el servicio vuelva a estar
-   en línea. Los metadatos de autoría ya constan en la guía correspondiente.
+   en línea. Los metadatos del depósito se acreditan a la ENMA como equipo y constan en la guía
+   correspondiente.
 4. El aviso al equipo estadístico de la ENMA sobre la desalineación de `migracion_reciente` y sobre
    la diferencia de cuatro casos en el conteo de Paraguay entre el documento metodológico y la base.
 5. El respaldo remoto del trabajo sin publicar que permanece en `enma2023_git`.
