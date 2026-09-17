@@ -128,15 +128,15 @@ El descenso de 97,2 % a 22,5 % deja la edición 2020 en un nivel comparable al d
 con esta cantidad de variables. La medición se hizo sobre las claves agregadas que reemplazan a las
 eliminadas, y no sobre el total de las 202 columnas, que arrojaría un valor sin sentido.
 
-## 6. Exposición residual detectada en la edición 2023
+## 6. Exposición residual detectada en la edición 2023, y su corrección
 
-Al comparar la regla nueva con la que se aplicó a la edición 2023 aparece una diferencia que
-corresponde informar.
+Al comparar la regla nueva con la que se aplicó a la edición 2023 apareció una diferencia que
+correspondía informar, y que se resolvió antes de cerrar este trabajo.
 
-La base publicada de 2023 conserva la columna `q5_descendencia_otro_descrip`, con 242 valores no
-vacíos, 155 distintos, un ratio de 0,64 y una extensión media de 14,2 caracteres. Con el umbral de
-0,75 que se usó entonces no se detectó; con el criterio que se aplicó ahora, que descuenta el
-relleno y baja el umbral a 0,60, la columna se marcaría para eliminación. Sus valores son
+La base de 2023 que estaba publicada conservaba la columna `q5_descendencia_otro_descrip`, con 242
+valores no vacíos, 155 distintos, un ratio de 0,64 y una extensión media de 14,2 caracteres. Con el
+umbral de 0,75 que se usó entonces no se detectó; con el criterio que se aplicó ahora, que descuenta
+el relleno y baja el umbral a 0,60, la columna se marca para eliminación. Sus valores son
 descripciones de ascendencia redactadas por las personas encuestadas, del tipo «Comunidad de los
 valles», «Grupo de Chapacos», «Mayor de la tercera edad de origen paraguayo» o «Inmigrante paraguaya
 de la tercera edad». De los 155 valores distintos, 134 aparecen una sola vez y 141 no superan los
@@ -146,11 +146,17 @@ El efecto de esa columna sobre el riesgo medido es considerable. Las variables a
 22,7 %; incorporando `q5_descendencia_otro_descrip` el valor asciende a 72,2 %, y la columna por sí
 sola alcanza 86,1 %.
 
-La columna no está documentada en `BASE_enma2023.md` ni mencionada en el informe de tratamiento de
-esa edición, que declara retirados los campos de redacción libre. La decisión sobre esa columna
-corresponde a la edición ya publicada y no se tomó en este trabajo. Queda registrada como punto
-abierto para que se resuelva con el mismo criterio con que se resolvió la de 2020, teniendo en
-cuenta que un asset de release puede haberse descargado ya y no se despublica.
+La columna no estaba documentada en `BASE_enma2023.md` ni mencionada en el informe de tratamiento de
+esa edición, que declaraba retirados los campos de redacción libre. La decisión se tomó el
+2026-09-17: se corrigió la edición 2023 con el mismo criterio que la de 2020 y se republicó, para
+que las dos bases publicadas en el repositorio reciban un tratamiento equivalente. El detalle consta
+en la sección 8 de `documentacion/INFORME_tratamiento_base.md`.
+
+Antes de corregir la edición 2023 se auditó el archivo completo con la regla nueva, para no sustituir
+una columna omitida por otra. La auditoría no encontró ninguna otra: sobre las 247 columnas del
+original, la regla corregida agrega exactamente una a las trece que la regla anterior ya detectaba.
+La comparación de la versión nueva con la publicada da cero diferencias de celda sobre las 227
+columnas comunes, de modo que la única modificación es la eliminación de esa columna.
 
 ## 7. Estado de la publicación
 
@@ -160,16 +166,17 @@ de 2023 sigue descargándose por la dirección anterior con el mismo resumen cri
 
 El tratamiento de 2020 se aplicó sobre la edición 2023 en un solo sentido: la base nueva hereda las
 categorías de región y el criterio de medición de riesgo, para que las dos ediciones publicadas en el
-mismo repositorio sean legibles con las mismas convenciones. La edición 2023 no se modificó.
+mismo repositorio sean legibles con las mismas convenciones. Con la corrección de la sección 6 el
+movimiento pasó a ser en los dos sentidos, porque la regla corregida se aplicó también a la edición
+2023. La regla vive en un único archivo, `scripts/regla_anonimizacion.py`, de modo que las dos
+ediciones no puedan divergir.
 
 ## 8. Puntos abiertos
 
-1. La decisión sobre `q5_descendencia_otro_descrip` en la base publicada de 2023, según lo expuesto
-   en la sección 6.
-2. El depósito en Zenodo con identificador persistente, pendiente de que el servicio vuelva a estar
+1. El depósito en Zenodo con identificador persistente, pendiente de que el servicio vuelva a estar
    en línea y del token y el ORCID de Natalia.
-3. La recodificación de la ocupación en grupos, si el análisis ocupacional desagregado resulta
+2. La recodificación de la ocupación en grupos, si el análisis ocupacional desagregado resulta
    central. En 2020 la pérdida es menor que en 2023, porque `q44_ocupacion` conserva catorce
    categorías cerradas y solo se retira el campo abierto.
-4. El aviso al equipo estadístico de la ENMA sobre la diferencia entre los seis tramos de edad que
+3. El aviso al equipo estadístico de la ENMA sobre la diferencia entre los seis tramos de edad que
    declara el documento metodológico de 2020 y los tres que trae la variable agrupada de la base.

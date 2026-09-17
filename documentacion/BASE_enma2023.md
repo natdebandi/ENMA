@@ -8,8 +8,8 @@ en el país. Es la única fuente de datos primarios específica y de aplicación
 población en la Argentina, se realiza cada tres años desde 2020 y su propósito es producir
 información para el análisis, la incidencia pública y el diseño de políticas.
 
-Esta base reúne los **4.679 casos** de la edición 2023, con **228 variables**. El archivo
-`ENMA2023_anonima_v2.csv` está en codificación UTF-8, con una fila por persona encuestada y
+Esta base reúne los **4.679 casos** de la edición 2023, con **227 variables**. El archivo
+`ENMA2023_anonima_v3.csv` está en codificación UTF-8, con una fila por persona encuestada y
 encabezados en la primera línea, de modo que puede abrirse con cualquier lector de datos. No
 contiene identificadores directos ni datos que permitan identificar a las personas encuestadas, de
 acuerdo con el carácter anónimo con que se levantó la encuesta.
@@ -25,14 +25,14 @@ repositorio.
 
 ## Qué contiene
 
-De las 228 variables, 216 corresponden a las preguntas del cuestionario y 12 son variables
+De las 227 variables, 215 corresponden a las preguntas del cuestionario y 12 son variables
 elaboradas para el análisis. El cuestionario tuvo 73 preguntas organizadas en once secciones, y se
-expresa en 216 variables porque las preguntas de selección múltiple se despliegan en una columna
+expresa en 215 variables porque las preguntas de selección múltiple se despliegan en una columna
 indicadora por opción.
 
 | Sección | Preguntas | Variables | Contenido |
 |---|---|---:|---|
-| Información general | q2 a q7 | 15 | Edad, país de nacimiento, género, descendencia, lengua materna y nivel de comprensión del castellano |
+| Información general | q2 a q7 | 14 | Edad, país de nacimiento, género, descendencia, lengua materna y nivel de comprensión del castellano |
 | Trayectorias y proyecto migratorio | q12 a q16 | 17 | Modo de ingreso, año de llegada, motivos de la migración y mudanzas dentro del país |
 | Situación documentaria | q17 a q25 | 18 | Tenencia y situación del DNI, dificultades de trámite, solicitud de asilo y naturalización |
 | Situación familiar y hogar | q26 a q31 | 7 | Composición del hogar, convivencia, discapacidad e hijos en el país y en el exterior |
@@ -100,7 +100,7 @@ variable general guarda las opciones elegidas concatenadas en una sola cadena de
 produce cientos de combinaciones distintas y la vuelve poco apta para tabular, mientras que cada
 opción tiene además su propia variable indicadora. Así, `q14_motivos` contiene 389 cadenas diferentes
 mientras que `q14_motivos_estudio`, `q14_motivos_mejor_trabajo` y las demás del bloque toman valor 1
-cuando la opción fue elegida y 0 cuando no. La base contiene 148 variables indicadoras de este tipo.
+cuando la opción fue elegida y 0 cuando no. La base contiene 147 variables indicadoras de este tipo.
 
 El archivo maneja dos formas de ausencia que conviene distinguir. La cadena `NA` aparece en 127
 variables e indica que la pregunta no fue respondida. La celda vacía aparece en 53 variables y señala
@@ -111,7 +111,7 @@ las dos formas como ausentes.
 En R:
 
 ```r
-enma <- read.csv("ENMA2023_anonima_v2.csv",
+enma <- read.csv("ENMA2023_anonima_v3.csv",
                  encoding = "UTF-8",
                  na.strings = c("NA", ""))
 
@@ -126,7 +126,7 @@ En Python:
 ```python
 import pandas as pd
 
-enma = pd.read_csv("ENMA2023_anonima_v2.csv",
+enma = pd.read_csv("ENMA2023_anonima_v3.csv",
                    na_values=["NA", ""],
                    keep_default_na=False)
 
@@ -173,8 +173,9 @@ quien respondía.
 Esta versión retira además las variables que permitían reidentificar a una persona, sea por
 combinación con otras o por el contenido mismo de la respuesta. Son la geografía a nivel de
 provincia, localidad y barrio, la ocupación declarada en texto libre y las respuestas de redacción
-libre de los campos de especificación. El detalle del tratamiento y la medición del riesgo residual
-constan en el informe técnico del repositorio.
+libre de los campos de especificación, entre ellas la descripción de ascendencia de la pregunta 5.
+El detalle del tratamiento y la medición del riesgo residual constan en el informe técnico del
+repositorio.
 
 Quien requiera los microdatos completos, con geografía fina o con los campos de texto, puede
 solicitarlos a la fuente mediante el formulario disponible en https://www.encuestamigrante.ar/
@@ -209,11 +210,12 @@ Cita de la fuente, en el formato que sugiere el documento metodológico:
 
 Cita de esta versión de la base:
 
-> Debandi, Natalia (2026). ENMA 2023. Base de datos, versión 1. Centro de Inteligencia Artificial
+> Debandi, Natalia (2026). ENMA 2023. Base de datos, versión 2. Centro de Inteligencia Artificial
 > Interdisciplinario, Universidad Nacional de San Martín y CONICET.
-> https://github.com/natdebandi/ENMA_2023/releases/tag/datos-v1
+> https://github.com/natdebandi/ENMA/releases/tag/datos-2023-v2
 
 La cita de esta versión no reemplaza la de la encuesta como fuente primaria.
 
 Licencia: Creative Commons Atribución 4.0 Internacional, cuyo texto consta en `LICENSE-datos.txt`,
-en la raíz del repositorio. La integridad de la descarga se verifica contra `SHA256SUMS.txt`.
+en la raíz del repositorio. La integridad de la descarga se verifica contra
+`documentacion/SHA256SUMS_ENMA2023.txt`.

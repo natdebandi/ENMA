@@ -50,7 +50,7 @@ y la segunda LF. El trabajo se hizo sobre la primera.
 ## 3. La versión anonimizada
 
 La versión tratada se generó en `~/investigacion/Workspace_R/ENMA_publico/` mediante un script de
-preparación, con `data/ENMA2023_anonima_v2.csv` como resultado de 4.679 filas por 228 columnas. El
+preparación, con `data/ENMA2023_anonima_v3.csv` como resultado de 4.679 filas por 227 columnas. El
 script quedó como utilitario local y no integra el repositorio, que publica la base y el
 procesamiento del Anuario y no las herramientas que los produjeron.
 
@@ -63,12 +63,13 @@ levantó la encuesta. El Documento metodológico lo consigna de manera explícit
 convocatoria hacía énfasis en que la encuesta era anónima y que no se preguntaba nada que permitiera
 la identificación personal de quien respondía.
 
-La versión definitiva elimina diecinueve columnas en dos etapas. La primera comprende los
+La versión definitiva elimina veinte columnas en dos etapas. La primera comprende los
 identificadores directos `ID` y `fecha`, las cuatro variables de geografía fina y la ocupación en
-texto libre. La segunda comprende las doce columnas de respuesta libre detectadas con una regla
-explícita, que alcanza a las columnas con al menos diez valores no vacíos, más del 75 % de valores
-distintos y extensión media superior a doce caracteres. El criterio es auditable y no responde a una
-selección manual.
+texto libre. La segunda comprende las trece columnas de respuesta libre detectadas con una regla
+explícita, que alcanza a las columnas con al menos diez valores no vacíos, más del 60 % de valores
+distintos y extensión media superior a doce caracteres. El porcentaje de valores distintos se mide
+sobre los valores que quedan después de descontar el rótulo de relleno de la opción abierta, según
+se explica en la sección 8. El criterio es auditable y no responde a una selección manual.
 
 La versión conserva las variables agregadas que la base ya traía, de modo que los cruces habituales
 siguen siendo posibles. Se mantienen `region_amba_agrup` con seis regiones, `genero_agrup`,
@@ -95,14 +96,14 @@ un mismo repositorio sugiere una división por tema. No se modificó nada más q
 
 ## 5. Estado de la publicación
 
-El código de procesamiento se subió a `natdebandi/ENMA_2023`, que contiene los ocho capítulos con su
+El código de procesamiento se subió a `natdebandi/ENMA`, que contiene los ocho capítulos con su
 versión html, este informe y la documentación del depósito. La verificación contra la interfaz de
 GitHub confirma que no hay archivos de datos en el árbol versionado. El `.gitignore`
 excluye `data/`, las extensiones `csv`, `xls`, `xlsx`, `sav` y `dta`, y los archivos `zip`, dado que
 el paquete de publicación lleva la base en su interior.
 
-La base anonimizada se publicó como adjunto de la versión `datos-v1` del repositorio, en
-https://github.com/natdebandi/ENMA_2023/releases/tag/datos-v1, con el archivo comprimido, el archivo
+La base anonimizada se publicó como adjunto de la versión `datos-2023-v2` del repositorio, en
+https://github.com/natdebandi/ENMA/releases/tag/datos-2023-v2, con el archivo comprimido, el archivo
 separado por comas y un listado de verificación de integridad. La descarga se comprobó de forma
 anónima, sin credencial, con resultado 200 y coincidencia del resumen criptográfico con la copia
 local.
@@ -142,7 +143,45 @@ documentada de `migracion_reciente` y su contenido efectivo, y los límites de l
 por provincia y por edades simples. Las advertencias que se desprenden de ellos constan en
 `documentacion/BASE_enma2023.md`, y el documento de la fuente se incluye en `documentacion/`.
 
-## 8. Puntos abiertos
+## 8. Corrección de la regla y segunda versión de la base
+
+Ese mismo trabajo sobre la edición 2020 puso en evidencia un defecto de la regla con que se generó la
+versión publicada en septiembre de 2026, según se detalla en
+`documentacion/INFORME_tratamiento_ENMA2020.md`.
+
+La regla anterior medía el porcentaje de valores distintos sobre todos los valores no vacíos de cada
+columna. Ese cálculo deja fuera los campos abiertos cuyo rótulo de relleno se repite, porque el
+rótulo infla la frecuencia del valor más común y arrastra el porcentaje por debajo del umbral. El
+documento metodológico de la edición declara que la fuente sustituyó el texto de los campos abiertos
+por la opción de relleno, y ese rótulo sobrevive en la base.
+
+El caso concreto es `q5_descendencia_otro_descrip`, la descripción de ascendencia de la pregunta 5.
+Reúne 242 valores no vacíos, 155 distintos y una extensión media de 14 caracteres, con un porcentaje
+de valores distintos de 0,64 que la regla anterior no alcanzaba a detectar. Sus valores son
+descripciones redactadas por las personas encuestadas, del tipo «Comunidad de los valles», «Grupo de
+Chapacos» o «Inmigrante paraguaya de la tercera edad». De los 155 valores distintos, 134 aparecen una
+sola vez.
+
+La regla corregida descuenta el rótulo de relleno antes de medir el porcentaje, que es lo que separa
+el contenido que sobrevivió del rótulo, y baja el umbral a 0,60 porque ya no necesita compensar ese
+arrastre. Con ese criterio la columna se detecta por su propia forma, sin nombrarla. La definición
+vive en un único archivo compartido por las dos ediciones, de modo que las reglas no puedan divergir
+otra vez.
+
+La corrección se auditó sobre la totalidad del archivo y agrega una sola columna a las trece que la
+regla ya detectaba. La versión corregida es `data/ENMA2023_anonima_v3.csv`, de 4.679 filas por 227
+columnas, idéntica a la publicada en las 227 columnas comunes celda por celda y con el mismo orden de
+variables. El riesgo sobre las claves agregadas se mantiene en 22,7 %. Se publicó como versión
+`datos-2023-v2`, que reemplaza a `datos-v1`.
+
+Para que el reemplazo no pierda el rastro de lo que estuvo publicado, se deja constancia de los
+resúmenes criptográficos de la versión sustituida: el archivo separado por comas era
+`a17216b1e33f93d63183db580187db4025ded9e76bf176be1fedb6daf6f53e48` y el comprimido,
+`91a826c9b60aeb677d36c442b94352773574dbf858f04fc54144a37e56adf71d`. Al momento del reemplazo la
+versión anterior había registrado tres descargas del archivo separado por comas y dos del comprimido,
+de modo que pudo haber circulado fuera del repositorio.
+
+## 9. Puntos abiertos
 
 1. La recodificación de la ocupación en grupos, en caso de que el análisis ocupacional desagregado
    resulte central para los capítulos.

@@ -14,7 +14,7 @@ capítulos del Anuario Migratorio Argentino 2024
 
 ## Descargar las bases
 
-**ENMA 2023 — https://github.com/natdebandi/ENMA/releases/tag/datos-v1**
+**ENMA 2023 — https://github.com/natdebandi/ENMA/releases/tag/datos-2023-v2**
 
 **ENMA 2020 — https://github.com/natdebandi/ENMA/releases/tag/datos-2020-v1**
 
@@ -25,7 +25,7 @@ de verificación de integridad `SHA256SUMS.txt`.
 | | ENMA 2020 | ENMA 2023 |
 |---|---:|---:|
 | Casos | 3.114 | 4.679 |
-| Variables | 202 | 228 |
+| Variables | 202 | 227 |
 | Preguntas del cuestionario | 62 | 73 |
 | Regiones de residencia | 6 más una categoría residual | 6 |
 | Ponderador de estimaciones totales | `pesos_para_estimaciones_totales` | `weightvec` |
@@ -104,8 +104,8 @@ Cita de la versión publicada de cada base:
 > Interdisciplinario, Universidad Nacional de San Martín y CONICET.
 > https://github.com/natdebandi/ENMA/releases/tag/datos-2020-v1
 
-> Debandi, Natalia (2026). ENMA 2023. Base de datos, versión 1. Centro de Inteligencia Artificial
+> Debandi, Natalia (2026). ENMA 2023. Base de datos, versión 2. Centro de Inteligencia Artificial
 > Interdisciplinario, Universidad Nacional de San Martín y CONICET.
-> https://github.com/natdebandi/ENMA/releases/tag/datos-v1
+> https://github.com/natdebandi/ENMA/releases/tag/datos-2023-v2
 
 La cita de cada versión no reemplaza la de la encuesta como fuente primaria.
