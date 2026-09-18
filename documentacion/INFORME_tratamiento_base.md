@@ -63,9 +63,10 @@ levantó la encuesta. El Documento metodológico lo consigna de manera explícit
 convocatoria hacía énfasis en que la encuesta era anónima y que no se preguntaba nada que permitiera
 la identificación personal de quien respondía.
 
-La versión definitiva elimina veinte columnas en dos etapas. La primera comprende los
-identificadores directos `ID` y `fecha`, las cuatro variables de geografía fina y la ocupación en
-texto libre. La segunda comprende las trece columnas de respuesta libre detectadas con una regla
+La versión definitiva elimina **diecinueve** columnas en dos etapas. La primera comprende los
+identificadores directos `ID` y `fecha`, las tres variables de geografía de residencia
+(`q8_provincia_res`, `q9_localidad` y `q10_barrio`) y la ocupación en texto libre. La segunda
+comprende las trece columnas de respuesta libre detectadas con una regla
 explícita, que alcanza a las columnas con al menos diez valores no vacíos, más del 60 % de valores
 distintos y extensión media superior a doce caracteres. El porcentaje de valores distintos se mide
 sobre los valores que quedan después de descontar el rótulo de relleno de la opción abierta, según
@@ -187,15 +188,76 @@ publicarse ni distribuirse, porque es la que conserva la columna retirada. La et
 commit que permanece en el historial de la rama principal y su árbol no contenía ningún archivo de
 datos, de modo que su eliminación no retiró nada más que el acceso al adjunto.
 
-## 9. Puntos abiertos
+## 9. Tercera versión de la base: reposición de `q11_otra_provincia`
+
+La versión `v3` publicada en `datos-2023-v2` retiraba una columna que no debía retirar. La capa de
+eliminación explícita la incluía con esta descripción:
+
+```python
+"q11_otra_provincia": "provincia de residencia previa",
+```
+
+La descripción no corresponde al contenido. La columna es **binaria**: dos valores, `Si` y `No`, sobre
+4.598 casos no vacíos, y ninguno de ellos nombra una provincia. La pregunta de origen, la número 11
+del cuestionario, dentro de la sección «Trayectorias y proyecto migratorio», es: «Antes de instalarse
+en su lugar de residencia actual, ¿vivió más de tres meses en otra u otras provincias de Argentina?».
+No hay texto libre ni geografía fina, y no aporta riesgo de reidentificación.
+
+A diferencia de `q8_provincia_res`, `q9_localidad` y `q10_barrio`, que son la residencia actual y sí
+identifican, `q11` registra un hecho binario sobre el pasado. Quedó retirada por el rótulo con que se
+la describió en la lista, no por su contenido.
+
+### El costo de haberla retirado
+
+La sección 1.11 del capítulo 1 del Anuario Migratorio 2024 usa esa columna. Al quedar fuera de la
+base publicada, la sección dejó de poder reproducirse desde el archivo que el release entrega: el
+capítulo solo corre contra los microdatos sin tratar.
+
+### La versión `v4`
+
+Un utilitario local, que no integra el repositorio por la misma razón que los anteriores, genera
+`data/ENMA2023_anonima_v4.csv`. Reproduce las dos capas de
+la regla sin cambios, con `q11_otra_provincia` fuera de la lista de eliminación explícita y con un
+control que aborta si la capa de texto libre la detectara.
+
+| | v3 (publicada) | v4 |
+|---|---:|---:|
+| Columnas | 227 | 228 |
+| Filas | 4.679 | 4.679 |
+| Preguntas del cuestionario | 215 | 216 |
+| Riesgo sobre claves agregadas | 22,7 % | 22,7 % |
+| Riesgo sumando `q11` | — | 25,6 % |
+
+Las 227 columnas comunes son **idénticas celda por celda**, verificado columna por columna. La única
+diferencia es la columna repuesta.
+
+El riesgo sobre las claves agregadas no cambia. Sumarle `q11` lo lleva de 22,7 % a 25,6 %, un
+movimiento dentro del mismo orden y muy lejos del 95,3 % de partida: la columna no reidentifica.
+
+### Los capítulos
+
+Los ocho capítulos leían `data/ENMA2023_final_public.csv`, que es el nombre de los microdatos **sin
+anonimizar** y no el de la base publicada. Se actualizaron los ocho a `data/ENMA2023_anonima_v4.csv` y
+se volvieron a generar los HTML. La verificación comparó, para cada capítulo, todas las celdas
+numéricas de sus tablas contra la versión anterior: **idénticas en los ocho**, 284, 179, 80, 114, 200,
+189, 120 y 96 celdas respectivamente. Ningún número del anuario cambia.
+
+Efecto lateral buscado: los HTML se generan con `echo=T`, de modo que el código fuente queda visible
+en el cuerpo. Hasta esta versión enseñaban el nombre del archivo sin anonimizar. Ahora nombran el que
+el release publica.
+
+## 10. Puntos abiertos
 
 1. La recodificación de la ocupación en grupos, en caso de que el análisis ocupacional desagregado
    resulte central para los capítulos.
-2. El destino del repositorio `research_migration`, cuya división por tema se presenta como la vía
-   razonable.
+2. ~~El destino del repositorio `research_migration`~~. Resuelto el 2026-09-18: el repositorio se
+   eliminó, junto con otros seis del mismo período. El contenido que solo vivía ahí, los catorce Rmd
+   de cruces ENMA/CENSO y el notebook de flujos, se conserva en el clon local y en un espejo
+   verificado en `~/laboratorio/github-backup-2026-09-18/`.
 3. El depósito en Zenodo con identificador persistente, pendiente de que el servicio vuelva a estar
    en línea. Los metadatos del depósito se acreditan a la ENMA como equipo y constan en la guía
-   correspondiente.
+   correspondiente. Debe depositarse la `v4`, no la `v3`, para no publicar con DOI una base que no
+   reproduce la sección 1.11 del anuario.
 4. El aviso al equipo estadístico de la ENMA sobre la desalineación de `migracion_reciente` y sobre
    la diferencia de cuatro casos en el conteo de Paraguay entre el documento metodológico y la base.
 5. El respaldo remoto del trabajo sin publicar que permanece en `enma2023_git`.

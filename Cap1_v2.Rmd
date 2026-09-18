@@ -22,10 +22,10 @@ library(kableExtra) # Mejora en la presentación de tablas
 ```{r carga, echo=TRUE, message=FALSE, warning=FALSE}
 
 # Carga del archivo CSV con la base de datos de la ENMA 2023
-enma <- read.csv("data/ENMA2023_final_public.csv")
+enma <- read.csv("data/ENMA2023_anonima_v4.csv")
 
 # Alternativamente, para leer desde un archivo Excel descomentar la siguiente línea:
-# enma <- read_xlsx("data/ENMA2023_final_public.xlsx", sheet = 1)
+# enma <- read_xlsx("data/ENMA2023_anonima_v4.xlsx", sheet = 1)
 
 ```
 

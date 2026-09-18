@@ -8,8 +8,8 @@ en el país. Es la única fuente de datos primarios específica y de aplicación
 población en la Argentina, se realiza cada tres años desde 2020 y su propósito es producir
 información para el análisis, la incidencia pública y el diseño de políticas.
 
-Esta base reúne los **4.679 casos** de la edición 2023, con **227 variables**. El archivo
-`ENMA2023_anonima_v3.csv` está en codificación UTF-8, con una fila por persona encuestada y
+Esta base reúne los **4.679 casos** de la edición 2023, con **228 variables**. El archivo
+`ENMA2023_anonima_v4.csv` está en codificación UTF-8, con una fila por persona encuestada y
 encabezados en la primera línea, de modo que puede abrirse con cualquier lector de datos. No
 contiene identificadores directos ni datos que permitan identificar a las personas encuestadas, de
 acuerdo con el carácter anónimo con que se levantó la encuesta.
@@ -25,15 +25,15 @@ repositorio.
 
 ## Qué contiene
 
-De las 227 variables, 215 corresponden a las preguntas del cuestionario y 12 son variables
+De las 228 variables, 216 corresponden a las preguntas del cuestionario y 12 son variables
 elaboradas para el análisis. El cuestionario tuvo 73 preguntas organizadas en once secciones, y se
-expresa en 215 variables porque las preguntas de selección múltiple se despliegan en una columna
+expresa en 216 variables porque las preguntas de selección múltiple se despliegan en una columna
 indicadora por opción.
 
 | Sección | Preguntas | Variables | Contenido |
 |---|---|---:|---|
 | Información general | q2 a q7 | 14 | Edad, país de nacimiento, género, descendencia, lengua materna y nivel de comprensión del castellano |
-| Trayectorias y proyecto migratorio | q12 a q16 | 17 | Modo de ingreso, año de llegada, motivos de la migración y mudanzas dentro del país |
+| Trayectorias y proyecto migratorio | q11 a q16 | 18 | Modo de ingreso, año de llegada, motivos de la migración y mudanzas dentro del país |
 | Situación documentaria | q17 a q25 | 18 | Tenencia y situación del DNI, dificultades de trámite, solicitud de asilo y naturalización |
 | Situación familiar y hogar | q26 a q31 | 7 | Composición del hogar, convivencia, discapacidad e hijos en el país y en el exterior |
 | Hijes y educación | q32 a q35 | 11 | Asistencia escolar, inconvenientes de acceso y discriminación en el ámbito educativo |
@@ -111,7 +111,7 @@ las dos formas como ausentes.
 En R:
 
 ```r
-enma <- read.csv("ENMA2023_anonima_v3.csv",
+enma <- read.csv("ENMA2023_anonima_v4.csv",
                  encoding = "UTF-8",
                  na.strings = c("NA", ""))
 
@@ -126,7 +126,7 @@ En Python:
 ```python
 import pandas as pd
 
-enma = pd.read_csv("ENMA2023_anonima_v3.csv",
+enma = pd.read_csv("ENMA2023_anonima_v4.csv",
                    na_values=["NA", ""],
                    keep_default_na=False)
 
@@ -171,9 +171,15 @@ erróneos. También retiró la pregunta final, de respuesta abierta, para proteg
 quien respondía.
 
 Esta versión retira además las variables que permitían reidentificar a una persona, sea por
-combinación con otras o por el contenido mismo de la respuesta. Son la geografía a nivel de
-provincia, localidad y barrio, la ocupación declarada en texto libre y las respuestas de redacción
-libre de los campos de especificación, entre ellas la descripción de ascendencia de la pregunta 5.
+combinación con otras o por el contenido mismo de la respuesta. Son la geografía de residencia a
+nivel de provincia, localidad y barrio, la ocupación declarada en texto libre y las respuestas de
+redacción libre de los campos de especificación, entre ellas la descripción de ascendencia de la
+pregunta 5.
+
+La pregunta 11, sobre si la persona vivió más de tres meses en otra provincia antes de instalarse
+donde reside, **sí se conserva**. Es binaria, no registra dónde vivió y no aporta riesgo de
+reidentificación; su retiro en una versión anterior dejaba sin reproducir la sección 1.11 del
+capítulo 1 del Anuario.
 El detalle del tratamiento y la medición del riesgo residual constan en el informe técnico del
 repositorio.
 
@@ -210,8 +216,8 @@ Cita de la fuente, en el formato que sugiere el documento metodológico:
 
 Cita de esta versión de la base:
 
-> Encuesta Nacional Migrante de Argentina (2026). ENMA 2023. Base de datos, versión 2 [Conjunto de
-> datos]. https://github.com/natdebandi/ENMA/releases/tag/datos-2023-v2
+> Encuesta Nacional Migrante de Argentina (2026). ENMA 2023. Base de datos, versión 3 [Conjunto de
+> datos]. https://github.com/natdebandi/ENMA/releases/tag/datos-2023-v3
 
 La cita de esta versión no reemplaza la de la encuesta como fuente primaria. Para los resultados
 publicados en el Anuario Migratorio Argentino corresponde citar el anuario de la edición

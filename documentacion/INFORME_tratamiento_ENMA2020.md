@@ -168,8 +168,9 @@ El tratamiento de 2020 se aplicó sobre la edición 2023 en un solo sentido: la 
 categorías de región y el criterio de medición de riesgo, para que las dos ediciones publicadas en el
 mismo repositorio sean legibles con las mismas convenciones. Con la corrección de la sección 6 el
 movimiento pasó a ser en los dos sentidos, porque la regla corregida se aplicó también a la edición
-2023. La regla vive en un único archivo, `scripts/regla_anonimizacion.py`, de modo que las dos
-ediciones no puedan divergir.
+2023. La regla vive en un único archivo compartido por las dos
+ediciones, que queda como utilitario local y no integra el repositorio, de modo que no puedan
+divergir.
 
 ## 8. Puntos abiertos
 

@@ -14,7 +14,7 @@ capítulos del Anuario Migratorio Argentino 2024
 
 ## Descargar las bases
 
-**ENMA 2023 — https://github.com/natdebandi/ENMA/releases/tag/datos-2023-v2**
+**ENMA 2023 — https://github.com/natdebandi/ENMA/releases/tag/datos-2023-v3**
 
 **ENMA 2020 — https://github.com/natdebandi/ENMA/releases/tag/datos-2020-v1**
 
@@ -25,7 +25,7 @@ de verificación de integridad `SHA256SUMS.txt`.
 | | ENMA 2020 | ENMA 2023 |
 |---|---:|---:|
 | Casos | 3.114 | 4.679 |
-| Variables | 202 | 227 |
+| Variables | 202 | 228 |
 | Preguntas del cuestionario | 62 | 73 |
 | Regiones de residencia | 6 más una categoría residual | 6 |
 | Ponderador de estimaciones totales | `pesos_para_estimaciones_totales` | `weightvec` |
@@ -49,8 +49,9 @@ ponderadores, que no son intercambiables.
   de partida para otras explotaciones de la base.
 - `LICENSE-datos.txt`, la licencia de los datos.
 
-Los capítulos leen el archivo desde `data/`, ruta que el control de versiones no incluye. Su
-ejecución requiere descargar la base y ubicarla allí.
+Los capítulos leen el archivo `ENMA2023_anonima_v4.csv` desde `data/`, ruta que el control de
+versiones no incluye. Su ejecución requiere descargar la base del release y ubicarla allí con ese
+nombre.
 
 ## Advertencia sobre la comparación entre ediciones
 
@@ -104,8 +105,8 @@ Cita de la versión publicada de cada base:
 > Encuesta Nacional Migrante de Argentina (2026). ENMA 2020. Base de datos, versión 1 [Conjunto de
 > datos]. https://github.com/natdebandi/ENMA/releases/tag/datos-2020-v1
 
-> Encuesta Nacional Migrante de Argentina (2026). ENMA 2023. Base de datos, versión 2 [Conjunto de
-> datos]. https://github.com/natdebandi/ENMA/releases/tag/datos-2023-v2
+> Encuesta Nacional Migrante de Argentina (2026). ENMA 2023. Base de datos, versión 3 [Conjunto de
+> datos]. https://github.com/natdebandi/ENMA/releases/tag/datos-2023-v3
 
 La cita de cada versión no reemplaza la de la encuesta como fuente primaria. Para los resultados
 publicados en el Anuario Migratorio Argentino corresponde citar el anuario de la edición
